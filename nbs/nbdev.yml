@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "slowai"
+  site-url: "https://jeremy.github.io/slowai"
+  description: "fastai course 2022"
+  repo-branch: main
+  repo-url: "https://github.com/jeremy/slowai"
