@@ -11,3 +11,6 @@ else
   echo "No NVIDIA GPU found! Installing CPU-only PyTorch..."
   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 fi
+
+nohup jupyter-lab &
+nohup nbdev_preview &
