@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-pip install -q jupyterlab nbdev
+pip install -q jupyterlab nbdev "black[jupyter]"
 
 if nvidia-smi | grep -q "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver."; then
   echo "NVIDIA GPU found! Installing GPU-accelerated PyTorch..."
@@ -12,5 +12,4 @@ else
   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 fi
 
-nohup jupyter-lab &
-nohup nbdev_preview &
+conda init zsh
