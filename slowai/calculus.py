@@ -56,9 +56,12 @@ class MNISTDataModule(L.LightningDataModule):
             shuffle=False,
         )
 
-    def as_matrix(self, split):
-        data = dm.trn if split == "trn" else dm.tst
+    def as_matrix(self, split, as_="torch"):
+        data = self.trn if split == "trn" else self.tst
         xs, ys = zip(*data)
         xs = torch.stack(xs).squeeze()
         ys = torch.tensor(ys)
+        if as_ == "numpy":
+            xs = xs.numpy()
+            ys = ys.numpy()
         return xs, ys
