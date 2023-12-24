@@ -179,4 +179,4 @@ class StableDiffusion:
             # workaround for ARM Macs where float64's are not supported
             t = t.to(torch.float32).to(TORCH_DEVICE)
             l = self.denoise(prompt_embedding, l, t, guidance_scale, i)
-        return decompress(l, vae, as_pil=as_pil)
+        return decompress(l, self.vae, as_pil=as_pil)

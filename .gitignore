@@ -149,3 +149,5 @@ checklink/cookies.txt
 
 # Quarto
 .quarto
+data/mnist.pkl.gz
+mnist.pkl.gz
