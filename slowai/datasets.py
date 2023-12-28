@@ -5,7 +5,6 @@ __all__ = ['inplace', 'subplots', 'get_grid', 'show_image', 'show_images']
 
 # %% ../nbs/05_datasets.ipynb 2
 import math
-from argparse import Namespace
 from itertools import zip_longest
 
 import fastcore.all as fc
@@ -13,7 +12,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torchvision.transforms.functional as T
-from datasets import load_dataset, load_dataset_builder
 from torch.utils.data import DataLoader
 
 # %% ../nbs/05_datasets.ipynb 10
