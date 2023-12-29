@@ -42,7 +42,7 @@ def subplots(
         ax = np.array([ax])
     return fig, ax
 
-# %% ../nbs/05_datasets.ipynb 18
+# %% ../nbs/05_datasets.ipynb 19
 @fc.delegates(plt.subplots, keep=True)
 def subplots(
     nrows: int = 1,  # Number of rows in returned axes grid
