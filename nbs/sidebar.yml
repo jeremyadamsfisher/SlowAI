@@ -5,5 +5,12 @@ website:
       - 00_overview.ipynb
       - 01_diving_deeper.ipynb
       - 01_diving_deeper_homework.ipynb
-      - 01_diving_deeper_paper_explanation.ipynb
-      - 02_matrix_math.ipynb
+      - 02_clustering.ipynb
+      - 03_calculus.ipynb
+      - 04_minibatch_training.ipynb
+      - 05_datasets.ipynb
+      - 06_convs.ipynb
+      - 07_autoencoders.ipynb
+      - 08_learner.ipynb
+      - 09_activations.ipynb
+      - 10_initializations.ipynb

@@ -5,7 +5,6 @@ __all__ = ['set_seed', 'Conv2dWithReLU', 'CNN', 'Hook', 'HooksCallback', 'StoreM
 
 # %% ../nbs/09_activations.ipynb 2
 import random
-from contextlib import contextmanager
 from functools import partial
 
 import fastcore.all as fc
@@ -14,7 +13,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from einops import rearrange
-from torch import Tensor, nn
+from torch import nn
 from torchmetrics.classification import MulticlassAccuracy
 
 from .datasets import get_grid, show_image
@@ -143,7 +142,7 @@ class StoreModuleStatsCB(HooksCallback):
         fig, axes = plt.subplots(1, 2, figsize=(10, 4))
         fig.tight_layout()
         for i, h in enumerate(self.hooks):
-            layer = model.layers[i]
+            layer = learn.model.layers[i]
             h.plot(*axes, label=f"layer {i}: {type(layer)}")
         fig.legend()
         fig.tight_layout()

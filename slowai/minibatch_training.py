@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = []
 
-# %% ../nbs/04_minibatch_training.ipynb 2
+# %% ../nbs/04_minibatch_training.ipynb 3
 import torch
 import torch.nn.functional as F
 from einops import rearrange

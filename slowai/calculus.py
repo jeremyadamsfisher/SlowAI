@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['MNISTDataModule']
 
-# %% ../nbs/03_calculus.ipynb 2
+# %% ../nbs/03_calculus.ipynb 3
 from dataclasses import dataclass
 from typing import Any
 
@@ -21,7 +21,7 @@ from torch.utils.data import DataLoader
 
 from .overview import show_image
 
-# %% ../nbs/03_calculus.ipynb 8
+# %% ../nbs/03_calculus.ipynb 9
 class MNISTDataModule(L.LightningDataModule):
     def __init__(self, bs=128):
         super().__init__()
