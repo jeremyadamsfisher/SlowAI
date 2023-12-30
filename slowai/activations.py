@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['set_seed', 'Conv2dWithReLU', 'CNN', 'Hook', 'HooksCallback', 'StoreModuleStats', 'StoreModuleStatsCB']
 
-# %% ../nbs/09_activations.ipynb 2
+# %% ../nbs/09_activations.ipynb 3
 import random
 from functools import partial
 
@@ -27,14 +27,14 @@ from slowai.learner import (
     to_cpu,
 )
 
-# %% ../nbs/09_activations.ipynb 3
+# %% ../nbs/09_activations.ipynb 4
 def set_seed(seed, deterministic=False):
     torch.use_deterministic_algorithms(deterministic)
     torch.manual_seed(seed)
     random.seed(seed)
     np.random.seed(seed)
 
-# %% ../nbs/09_activations.ipynb 6
+# %% ../nbs/09_activations.ipynb 7
 class Conv2dWithReLU(nn.Module):
     @fc.delegates(nn.Conv2d)
     def __init__(self, *args, **kwargs):
@@ -59,7 +59,7 @@ class CNN(nn.Module):
     def forward(self, x):
         return rearrange(self.layers(x), "bs c w h -> bs (c w h)")
 
-# %% ../nbs/09_activations.ipynb 10
+# %% ../nbs/09_activations.ipynb 11
 class Hook:
     def __init__(self, m, f):
         self.hook = m.register_forward_hook(partial(f, self))
@@ -70,7 +70,7 @@ class Hook:
     def __del__(self):
         self.remove()
 
-# %% ../nbs/09_activations.ipynb 11
+# %% ../nbs/09_activations.ipynb 12
 class HooksCallback(Callback):
     def __init__(
         self,
@@ -99,7 +99,7 @@ class HooksCallback(Callback):
     def __len__(self):
         return len(self.hooks)
 
-# %% ../nbs/09_activations.ipynb 13
+# %% ../nbs/09_activations.ipynb 14
 class StoreModuleStats(Hook):
     def __init__(self, m, on_train=True, on_valid=False):
         self.moments = []
@@ -122,7 +122,7 @@ class StoreModuleStats(Hook):
         ax0.plot(means, label=label)
         ax1.plot(stds)
 
-# %% ../nbs/09_activations.ipynb 14
+# %% ../nbs/09_activations.ipynb 15
 class StoreModuleStatsCB(HooksCallback):
     def __init__(
         self,

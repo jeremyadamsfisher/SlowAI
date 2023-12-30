@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = []
 
-# %% ../nbs/10_initializations.ipynb 2
+# %% ../nbs/10_initializations.ipynb 3
 import random
 from contextlib import contextmanager
 from functools import partial

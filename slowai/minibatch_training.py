@@ -7,5 +7,7 @@ __all__ = []
 import torch
 import torch.nn.functional as F
 from einops import rearrange
+import fastcore.all as fc
+
 
 from .calculus import MNISTDataModule

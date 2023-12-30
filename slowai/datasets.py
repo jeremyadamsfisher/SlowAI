@@ -3,18 +3,20 @@
 # %% auto 0
 __all__ = ['inplace', 'subplots', 'get_grid', 'show_image', 'show_images']
 
-# %% ../nbs/05_datasets.ipynb 2
+# %% ../nbs/05_datasets.ipynb 3
 import math
 from itertools import zip_longest
+from typing import Optional
 
 import fastcore.all as fc
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torchvision.transforms.functional as T
+from datasets import load_dataset
 from torch.utils.data import DataLoader
 
-# %% ../nbs/05_datasets.ipynb 10
+# %% ../nbs/05_datasets.ipynb 11
 def inplace(f):
     def _f(b):
         f(b)
@@ -22,7 +24,7 @@ def inplace(f):
 
     return _f
 
-# %% ../nbs/05_datasets.ipynb 15
+# %% ../nbs/05_datasets.ipynb 16
 @fc.delegates(plt.subplots, keep=True)
 def subplots(
     nrows: int = 1,  # Number of rows in returned axes grid
@@ -42,7 +44,7 @@ def subplots(
         ax = np.array([ax])
     return fig, ax
 
-# %% ../nbs/05_datasets.ipynb 19
+# %% ../nbs/05_datasets.ipynb 20
 @fc.delegates(plt.subplots, keep=True)
 def subplots(
     nrows: int = 1,  # Number of rows in returned axes grid
@@ -115,9 +117,9 @@ def show_image(im, ax=None, figsize=None, title=None, noframe=True, **kwargs):
 @fc.delegates(subplots)
 def show_images(
     ims: list,  # Images to show
-    nrows: int | None = None,  # Number of rows in grid
-    ncols: int | None = None,  # Number of columns in grid (auto-calculated if None)
-    titles: list | None = None,  # Optional list of titles for each image
+    nrows: Optional[int] = None,  # Number of rows in grid
+    ncols: Optional[int] = None,  # Number of columns in grid (auto-calculated if None)
+    titles: Optional[list] = None,  # Optional list of titles for each image
     **kwargs,
 ):
     "Show all images `ims` as subplots with `rows` using `titles`"

@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['MNIST_URL', 'data_fp', 'download_file', 'download_mnist']
 
-# %% ../nbs/01_diving_deeper.ipynb 2
+# %% ../nbs/01_diving_deeper.ipynb 3
 import gzip
 import os
 import pickle
@@ -17,7 +17,7 @@ import torch
 
 from .overview import show_image
 
-# %% ../nbs/01_diving_deeper.ipynb 4
+# %% ../nbs/01_diving_deeper.ipynb 5
 # Get the data
 MNIST_URL = "https://github.com/mnielsen/neural-networks-and-deep-learning/blob/master/data/mnist.pkl.gz?raw=true"
 

@@ -4,7 +4,7 @@
 __all__ = ['TORCH_DEVICE', 'to_tensor', 'VAE_TO_UNET_SCALING_FACTOR', 'show_images', 'show_image', 'image_from_url', 'compress',
            'decompress', 'StableDiffusion']
 
-# %% ../nbs/00_overview.ipynb 2
+# %% ../nbs/00_overview.ipynb 3
 from dataclasses import dataclass
 from io import BytesIO
 from typing import Any, Callable, List
@@ -27,7 +27,7 @@ from tqdm import tqdm, trange
 from transformers import CLIPTextModel, CLIPTokenizer
 from transformers import logging as tsmrs_logging
 
-# %% ../nbs/00_overview.ipynb 5
+# %% ../nbs/00_overview.ipynb 6
 def show_images(imgs, titles=None, K=2):
     fig_size = (K * len(imgs), K)
     fig, axes = plt.subplots(1, len(imgs), figsize=fig_size)
@@ -42,7 +42,7 @@ def show_images(imgs, titles=None, K=2):
 def show_image(img, title=None, K=2):
     return show_images([img], title, K)
 
-# %% ../nbs/00_overview.ipynb 8
+# %% ../nbs/00_overview.ipynb 9
 TORCH_DEVICE = (
     "mps"
     if torch.backends.mps.is_available()
@@ -51,13 +51,13 @@ TORCH_DEVICE = (
     else "cpu"
 )
 
-# %% ../nbs/00_overview.ipynb 13
+# %% ../nbs/00_overview.ipynb 14
 def image_from_url(url: str) -> np.array:
     response = requests.get(url)
     image = Image.open(BytesIO(response.content))
     return np.array(image)
 
-# %% ../nbs/00_overview.ipynb 14
+# %% ../nbs/00_overview.ipynb 15
 to_tensor = tfms.ToTensor()
 
 
@@ -98,7 +98,7 @@ def decompress(
         img = Image.fromarray(img)
     return img
 
-# %% ../nbs/00_overview.ipynb 30
+# %% ../nbs/00_overview.ipynb 31
 @dataclass
 class StableDiffusion:
     tokenizer: CLIPTokenizer
