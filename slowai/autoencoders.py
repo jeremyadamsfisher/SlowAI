@@ -8,6 +8,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn, optim
 from tqdm import tqdm
+
 from .convs import conv, def_device, fashion_mnist, to_device
 from .datasets import show_images
 
