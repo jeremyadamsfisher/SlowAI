@@ -5,17 +5,12 @@ __all__ = ['def_device', 'conv', 'to_device', 'get_model', 'accuracy', 'fit', 'g
            'fashion_mnist']
 
 # %% ../nbs/06_convs.ipynb 2
-import contextlib
 import os
-import sys
 import tempfile
 from contextlib import contextmanager
 from typing import Mapping
 
 import datasets
-import fastcore.all as fc
-import matplotlib.pyplot as plt
-import numpy as np
 import torch
 import torch.nn.functional as F
 import torchvision.transforms.functional as T
