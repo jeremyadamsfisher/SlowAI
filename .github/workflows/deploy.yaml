@@ -26,10 +26,19 @@ jobs:
           pip install -Uq nbdev
           test -f setup.py && pip install -e ".[dev]" --extra-index-url https://download.pytorch.org/whl/cpu
           nbdev_docs
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # Upload entire repository
-          path: "./_docs"
+      - name: Commit docs directory
+        shell: bash
+        run: |
+          set -ux
+
+          if [[ -z $(git status -s) ]]; then
+            echo "No changes to the docs directory. Exiting."
+            exit 0
+          fi
+
+          git config --global user.name "GitHub Actions"
+          git config --global user.email ""
+
+          git add ./_docs
+          git commit -m "Update docs"
+          git push
