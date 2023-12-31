@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Building a framework for the deep learning workflow">
+
+<title>slowai - Learner</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="slowai - Learner">
+<meta property="og:description" content="Building a framework for the deep learning workflow">
+<meta property="og:image" content="https://jeremy.github.io/slowai/08_learner_files/figure-html/cell-6-output-1.png">
+<meta property="og:site-name" content="slowai">
+<meta property="og:image:height" content="322">
+<meta property="og:image:width" content="640">
+<meta name="twitter:title" content="slowai - Learner">
+<meta name="twitter:description" content="Building a framework for the deep learning workflow">
+<meta name="twitter:image" content="https://jeremy.github.io/slowai/08_learner_files/figure-html/cell-6-output-1.png">
+<meta name="twitter:image-height" content="322">
+<meta name="twitter:image-width" content="640">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">slowai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/jeremy/slowai" rel="" target=""><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./learner.html">Learner</a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SlowAI</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Course overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./diving_deeper.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Diving Deeper</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./diving_deeper_homework.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Diving Deeper, homework</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Clustering</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./calculus.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Calculus and Backprop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./minibatch_training.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Minibatch training</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./datasets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data and visualizations</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./convs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Convolutions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./autoencoders.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Autoencoders</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./learner.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Learner</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./activations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Activation Statistics</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./initializations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Initializations</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#data" id="toc-data" class="nav-link active" data-scroll-target="#data">Data</a>
+  <ul>
+  <li><a href="#dataloaders" id="toc-dataloaders" class="nav-link" data-scroll-target="#dataloaders">DataLoaders</a></li>
+  <li><a href="#tensorize_images" id="toc-tensorize_images" class="nav-link" data-scroll-target="#tensorize_images">tensorize_images</a></li>
+  <li><a href="#batchify" id="toc-batchify" class="nav-link" data-scroll-target="#batchify">batchify</a></li>
+  </ul></li>
+  <li><a href="#learner-and-callbacks" id="toc-learner-and-callbacks" class="nav-link" data-scroll-target="#learner-and-callbacks">Learner and callbacks</a>
+  <ul>
+  <li><a href="#cancelepochexception" id="toc-cancelepochexception" class="nav-link" data-scroll-target="#cancelepochexception">CancelEpochException</a></li>
+  <li><a href="#cancelbatchexception" id="toc-cancelbatchexception" class="nav-link" data-scroll-target="#cancelbatchexception">CancelBatchException</a></li>
+  <li><a href="#cancelfitexception" id="toc-cancelfitexception" class="nav-link" data-scroll-target="#cancelfitexception">CancelFitException</a></li>
+  <li><a href="#callback" id="toc-callback" class="nav-link" data-scroll-target="#callback">Callback</a></li>
+  <li><a href="#with_cbs" id="toc-with_cbs" class="nav-link" data-scroll-target="#with_cbs">with_cbs</a></li>
+  <li><a href="#learner" id="toc-learner" class="nav-link" data-scroll-target="#learner">Learner</a></li>
+  <li><a href="#traincb" id="toc-traincb" class="nav-link" data-scroll-target="#traincb">TrainCB</a></li>
+  <li><a href="#metricscb" id="toc-metricscb" class="nav-link" data-scroll-target="#metricscb">MetricsCB</a></li>
+  <li><a href="#progresscb" id="toc-progresscb" class="nav-link" data-scroll-target="#progresscb">ProgressCB</a></li>
+  <li><a href="#after" id="toc-after" class="nav-link" data-scroll-target="#after">after</a></li>
+  <li><a href="#devicecb" id="toc-devicecb" class="nav-link" data-scroll-target="#devicecb">DeviceCB</a></li>
+  <li><a href="#fashion_mnist" id="toc-fashion_mnist" class="nav-link" data-scroll-target="#fashion_mnist">fashion_mnist</a></li>
+  <li><a href="#trainlearner" id="toc-trainlearner" class="nav-link" data-scroll-target="#trainlearner">TrainLearner</a></li>
+  <li><a href="#to_cpu" id="toc-to_cpu" class="nav-link" data-scroll-target="#to_cpu">to_cpu</a></li>
+  <li><a href="#lrfindercb" id="toc-lrfindercb" class="nav-link" data-scroll-target="#lrfindercb">LRFinderCB</a></li>
+  <li><a href="#show_doc" id="toc-show_doc" class="nav-link" data-scroll-target="#show_doc">show_doc</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/jeremy/slowai/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Learner</h1>
+</div>
+
+<div>
+  <div class="description">
+    Building a framework for the deep learning workflow
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<p>Adapted from:</p>
+<ul>
+<li><a href="https://youtu.be/0Hi2r4CaHvk?si=GA9KaGAnGOlS_NJO&amp;t=3568">https://youtu.be/0Hi2r4CaHvk?si=GA9KaGAnGOlS_NJO&amp;t=3568</a></li>
+<li><a href="https://github.com/fastai/course22p2/blob/master/nbs/09_learner.ipynb">https://github.com/fastai/course22p2/blob/master/nbs/09_learner.ipynb</a></li>
+</ul>
+<p>At this point, Jeremy points out that copying and pasting code leads to bottlenecks in modeling velocity. We need to start to build a framework to:</p>
+<ul>
+<li>rapidly try things</li>
+<li>figure out where things are broken</li>
+<li>load data quickly</li>
+<li>transparently assign CUDA devices</li>
+</ul>
+<section id="data" class="level2">
+<h2 class="anchored" data-anchor-id="data">Data</h2>
+<p>We’ll start with a wrapper around <code>datasets</code> to make it simpler to work with raw PyTorch.</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L33" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="dataloaders" class="level3">
+<h3 class="anchored" data-anchor-id="dataloaders">DataLoaders</h3>
+<blockquote class="blockquote">
+<pre><code> DataLoaders (splits, nworkers:int=0, bs=32, collate_fn=&lt;function
+              default_collate&gt;, tdir=&lt;TemporaryDirectory
+              '/tmp/tmpdpbo3_u2'&gt;)</code></pre>
+</blockquote>
+<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<div class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dls <span class="op">=</span> DataLoaders.from_hf(<span class="st">"fashion_mnist"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We should also add some helpers to facilitate processing images.</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L115" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="tensorize_images" class="level3">
+<h3 class="anchored" data-anchor-id="tensorize_images">tensorize_images</h3>
+<blockquote class="blockquote">
+<pre><code> tensorize_images (dls, feature='image', normalize=True)</code></pre>
+</blockquote>
+<p>Tensorize and normalize the image feature</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L108" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="batchify" class="level3">
+<h3 class="anchored" data-anchor-id="batchify">batchify</h3>
+<blockquote class="blockquote">
+<pre><code> batchify (f)</code></pre>
+</blockquote>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>dls <span class="op">=</span> tensorize_images(dls)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>xb <span class="op">=</span> dls.peek()[<span class="st">"image"</span>]</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>show_images(xb[:<span class="dv">8</span>, ...], figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">4</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="08_learner_files/figure-html/cell-6-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>Notice that this unit-normalized</p>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>plt.hist(xb.view(<span class="op">-</span><span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<pre><code>(array([13418.,   632.,   662.,  1059.,  1012.,  1076.,  1408.,  2054.,
+         2393.,  1374.]),
+ array([-0.82495719, -0.54097831, -0.25699943,  0.02697943,  0.3109583 ,
+         0.59493721,  0.87891603,  1.16289496,  1.44687378,  1.73085272,
+         2.01483154]),
+ &lt;BarContainer object of 10 artists&gt;)</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="08_learner_files/figure-html/cell-7-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="learner-and-callbacks" class="level2">
+<h2 class="anchored" data-anchor-id="learner-and-callbacks">Learner and callbacks</h2>
+<p>Next, we’ll add a learner with callbacks. Recall, this was our earlier fit function:</p>
+<div class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>fit??</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div class="ansi-escaped-output">
+<pre><span class="ansi-red-fg">Signature:</span> fit<span class="ansi-blue-fg">(</span>epochs<span class="ansi-blue-fg">,</span> model<span class="ansi-blue-fg">,</span> loss_func<span class="ansi-blue-fg">,</span> opt<span class="ansi-blue-fg">,</span> train_dl<span class="ansi-blue-fg">,</span> valid_dl<span class="ansi-blue-fg">,</span> tqdm_<span class="ansi-blue-fg">=</span><span class="ansi-green-fg">False</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-red-fg">Docstring:</span> &lt;no docstring&gt;
+<span class="ansi-red-fg">Source:</span>   
+<span class="ansi-green-fg">def</span> fit<span class="ansi-blue-fg">(</span>epochs<span class="ansi-blue-fg">,</span> model<span class="ansi-blue-fg">,</span> loss_func<span class="ansi-blue-fg">,</span> opt<span class="ansi-blue-fg">,</span> train_dl<span class="ansi-blue-fg">,</span> valid_dl<span class="ansi-blue-fg">,</span> tqdm_<span class="ansi-blue-fg">=</span><span class="ansi-green-fg">False</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+    progress <span class="ansi-blue-fg">=</span> tqdm <span class="ansi-green-fg">if</span> tqdm_ <span class="ansi-green-fg">else</span> <span class="ansi-green-fg">lambda</span> x<span class="ansi-blue-fg">:</span> x
+    <span class="ansi-green-fg">for</span> epoch <span class="ansi-green-fg">in</span> range<span class="ansi-blue-fg">(</span>epochs<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+        model<span class="ansi-blue-fg">.</span>train<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+        <span class="ansi-green-fg">for</span> batch <span class="ansi-green-fg">in</span> progress<span class="ansi-blue-fg">(</span>train_dl<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+            xb<span class="ansi-blue-fg">,</span> yb <span class="ansi-blue-fg">=</span> map<span class="ansi-blue-fg">(</span>to_device<span class="ansi-blue-fg">,</span> batch<span class="ansi-blue-fg">)</span>
+            loss <span class="ansi-blue-fg">=</span> loss_func<span class="ansi-blue-fg">(</span>model<span class="ansi-blue-fg">(</span>xb<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">,</span> yb<span class="ansi-blue-fg">)</span>
+            loss<span class="ansi-blue-fg">.</span>backward<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+            opt<span class="ansi-blue-fg">.</span>step<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+            opt<span class="ansi-blue-fg">.</span>zero_grad<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+        model<span class="ansi-blue-fg">.</span>eval<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+        <span class="ansi-green-fg">with</span> torch<span class="ansi-blue-fg">.</span>no_grad<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+            tot_loss<span class="ansi-blue-fg">,</span> tot_acc<span class="ansi-blue-fg">,</span> count <span class="ansi-blue-fg">=</span> <span class="ansi-cyan-fg">0.0</span><span class="ansi-blue-fg">,</span> <span class="ansi-cyan-fg">0.0</span><span class="ansi-blue-fg">,</span> <span class="ansi-cyan-fg">0</span>
+            <span class="ansi-green-fg">for</span> batch <span class="ansi-green-fg">in</span> progress<span class="ansi-blue-fg">(</span>valid_dl<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+                xb<span class="ansi-blue-fg">,</span> yb <span class="ansi-blue-fg">=</span> map<span class="ansi-blue-fg">(</span>to_device<span class="ansi-blue-fg">,</span> batch<span class="ansi-blue-fg">)</span>
+                pred <span class="ansi-blue-fg">=</span> model<span class="ansi-blue-fg">(</span>xb<span class="ansi-blue-fg">)</span>
+                n <span class="ansi-blue-fg">=</span> len<span class="ansi-blue-fg">(</span>xb<span class="ansi-blue-fg">)</span>
+                count <span class="ansi-blue-fg">+=</span> n
+                tot_loss <span class="ansi-blue-fg">+=</span> loss_func<span class="ansi-blue-fg">(</span>pred<span class="ansi-blue-fg">,</span> yb<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>item<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span> <span class="ansi-blue-fg">*</span> n
+                tot_acc <span class="ansi-blue-fg">+=</span> accuracy<span class="ansi-blue-fg">(</span>pred<span class="ansi-blue-fg">,</span> yb<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>item<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span> <span class="ansi-blue-fg">*</span> n
+        print<span class="ansi-blue-fg">(</span>
+            <span class="ansi-blue-fg">f"{epoch=}, validation loss={tot_loss / count:.3f}, validation accuracy={tot_acc / count:.2f}"</span>
+        <span class="ansi-blue-fg">)</span>
+    <span class="ansi-green-fg">return</span> tot_loss <span class="ansi-blue-fg">/</span> count<span class="ansi-blue-fg">,</span> tot_acc <span class="ansi-blue-fg">/</span> count
+<span class="ansi-red-fg">File:</span>      ~/Desktop/SlowAI/nbs/slowai/convs.py
+<span class="ansi-red-fg">Type:</span>      function</pre>
+</div>
+</div>
+</div>
+<p>To add callbacks, we need a few clever Exception control flow signals</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L137" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="cancelepochexception" class="level3">
+<h3 class="anchored" data-anchor-id="cancelepochexception">CancelEpochException</h3>
+<p>Common base class for all non-exit exceptions.</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L133" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="cancelbatchexception" class="level3">
+<h3 class="anchored" data-anchor-id="cancelbatchexception">CancelBatchException</h3>
+<p>Common base class for all non-exit exceptions.</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L129" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="cancelfitexception" class="level3">
+<h3 class="anchored" data-anchor-id="cancelfitexception">CancelFitException</h3>
+<p>Common base class for all non-exit exceptions.</p>
+<p>Then, we define the learner and callback classes</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L141" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="callback" class="level3">
+<h3 class="anchored" data-anchor-id="callback">Callback</h3>
+<blockquote class="blockquote">
+<pre><code> Callback ()</code></pre>
+</blockquote>
+<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L147" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="with_cbs" class="level3">
+<h3 class="anchored" data-anchor-id="with_cbs">with_cbs</h3>
+<blockquote class="blockquote">
+<pre><code> with_cbs (nm)</code></pre>
+</blockquote>
+<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L165" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="learner" class="level3">
+<h3 class="anchored" data-anchor-id="learner">Learner</h3>
+<blockquote class="blockquote">
+<pre><code> Learner (model, dls, loss_func=&lt;function mse_loss&gt;, lr=0.1, cbs=None,
+          opt_func=&lt;class 'torch.optim.sgd.SGD'&gt;)</code></pre>
+</blockquote>
+<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<p>This learner delegates all aspects of model training to callbacks, so something like this is neccesary.</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L249" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="traincb" class="level3">
+<h3 class="anchored" data-anchor-id="traincb">TrainCB</h3>
+<blockquote class="blockquote">
+<pre><code> TrainCB ()</code></pre>
+</blockquote>
+<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<p>Now that we have the basic scaffolding, we’ll add metrics. Updating and storing state will be handled by <code>torchmetrics</code>, but we’ll define a callback to orchestrate the torchmetrics instances.</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L268" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="metricscb" class="level3">
+<h3 class="anchored" data-anchor-id="metricscb">MetricsCB</h3>
+<blockquote class="blockquote">
+<pre><code> MetricsCB (*ms, **metrics)</code></pre>
+</blockquote>
+<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<p>Finally, we can define a Trainer callback specifically for the autoencoder objective.</p>
+<div class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TrainAutoencoderCB(TrainCB):</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> predict(<span class="va">self</span>, learn):</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>        xb, <span class="op">*</span>_ <span class="op">=</span> learn.batch</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>        learn.preds <span class="op">=</span> learn.model(xb)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_loss(<span class="va">self</span>, learn):</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>        xb, <span class="op">*</span>_ <span class="op">=</span> learn.batch</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>        learn.loss <span class="op">=</span> learn.loss_func(learn.preds, xb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s also define some additional useful callbacks:</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L316" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="progresscb" class="level3">
+<h3 class="anchored" data-anchor-id="progresscb">ProgressCB</h3>
+<blockquote class="blockquote">
+<pre><code> ProgressCB (plot=False)</code></pre>
+</blockquote>
+<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L312" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="after" class="level3">
+<h3 class="anchored" data-anchor-id="after">after</h3>
+<blockquote class="blockquote">
+<pre><code> after (callback_cls:Type[__main__.Callback])</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L300" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="devicecb" class="level3">
+<h3 class="anchored" data-anchor-id="devicecb">DeviceCB</h3>
+<blockquote class="blockquote">
+<pre><code> DeviceCB (device='cuda')</code></pre>
+</blockquote>
+<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<p>Putting it all together</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L361" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="fashion_mnist" class="level3">
+<h3 class="anchored" data-anchor-id="fashion_mnist">fashion_mnist</h3>
+<blockquote class="blockquote">
+<pre><code> fashion_mnist ()</code></pre>
+</blockquote>
+<div class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> get_ae_model()</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>dls <span class="op">=</span> fashion_mnist()</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>cbs <span class="op">=</span> [</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    MetricsCB(),</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    DeviceCB(),</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    TrainAutoencoderCB(),</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    ProgressCB(plot<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> Learner(</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    model,</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    dls,</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    F.mse_loss,</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    lr<span class="op">=</span><span class="fl">0.01</span>,</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    cbs<span class="op">=</span>cbs,</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    opt_func<span class="op">=</span>torch.optim.AdamW,</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>).fit(<span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th">loss</th>
+<th data-quarto-table-cell-role="th">epoch</th>
+<th data-quarto-table-cell-role="th">train</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0.971</td>
+<td>0</td>
+<td>train</td>
+</tr>
+<tr class="even">
+<td>0.770</td>
+<td>0</td>
+<td>eval</td>
+</tr>
+<tr class="odd">
+<td>0.742</td>
+<td>1</td>
+<td>train</td>
+</tr>
+<tr class="even">
+<td>0.717</td>
+<td>1</td>
+<td>eval</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="08_learner_files/figure-html/cell-22-output-3.png" class="img-fluid"></p>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>CPU times: user 24 s, sys: 1.39 s, total: 25.4 s
+Wall time: 27.7 s</code></pre>
+</div>
+</div>
+<div class="cell" data-jupyter="{&quot;source_hidden&quot;:true}" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> viz(model, xb):</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    xb <span class="op">=</span> xb.to(def_device)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    pred <span class="op">=</span> model(xb)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    paired <span class="op">=</span> []</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">min</span>(xb.shape[<span class="dv">0</span>], <span class="dv">8</span>)):</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>        paired.append(xb[i, ...])</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>        paired.append(pred[i, ...])</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    show_images(paired, figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">8</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>xbt, _ <span class="op">=</span> dls.peek(<span class="st">"test"</span>)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>viz(model, xbt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="08_learner_files/figure-html/cell-24-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>Still not good, but less code!</p>
+<p>I don’t really like the idea of delegating the core training functions to callbacks, so we can just implement them here:</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L365" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="trainlearner" class="level3">
+<h3 class="anchored" data-anchor-id="trainlearner">TrainLearner</h3>
+<blockquote class="blockquote">
+<pre><code> TrainLearner (model, dls, loss_func=&lt;function mse_loss&gt;, lr=0.1,
+               cbs=None, opt_func=&lt;class 'torch.optim.sgd.SGD'&gt;)</code></pre>
+</blockquote>
+<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<p>This works pretty similarly</p>
+<div class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> AutoencoderTrainer(TrainLearner):</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> predict(<span class="va">self</span>):</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>        xb, <span class="op">*</span>_ <span class="op">=</span> <span class="va">self</span>.batch</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.preds <span class="op">=</span> <span class="va">self</span>.model(xb)</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_loss(<span class="va">self</span>):</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>        xb, <span class="op">*</span>_ <span class="op">=</span> <span class="va">self</span>.batch</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.loss <span class="op">=</span> <span class="va">self</span>.loss_func(<span class="va">self</span>.preds, xb)</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>cbs <span class="op">=</span> [MetricsCB(), DeviceCB(), ProgressCB(plot<span class="op">=</span><span class="va">True</span>)]</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> AutoencoderTrainer(</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>    get_ae_model(),</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>    dls,</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>    F.mse_loss,</span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>    lr<span class="op">=</span><span class="fl">0.01</span>,</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>    cbs<span class="op">=</span>cbs,</span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>    opt_func<span class="op">=</span>torch.optim.AdamW,</span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>).fit(<span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th">loss</th>
+<th data-quarto-table-cell-role="th">epoch</th>
+<th data-quarto-table-cell-role="th">train</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0.965</td>
+<td>0</td>
+<td>train</td>
+</tr>
+<tr class="even">
+<td>0.769</td>
+<td>0</td>
+<td>eval</td>
+</tr>
+<tr class="odd">
+<td>0.749</td>
+<td>1</td>
+<td>train</td>
+</tr>
+<tr class="even">
+<td>0.721</td>
+<td>1</td>
+<td>eval</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="08_learner_files/figure-html/cell-26-output-3.png" class="img-fluid"></p>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>CPU times: user 22.1 s, sys: 98.1 ms, total: 22.2 s
+Wall time: 22.2 s</code></pre>
+</div>
+</div>
+<p>Can we improve the reconstruction? Let’s implement a simple momentum.</p>
+<div class="cell" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MomentumCB(Callback):</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, momentum<span class="op">=</span><span class="fl">0.85</span>):</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.momentum <span class="op">=</span> momentum</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> zero_grad(<span class="va">self</span>, learn):</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">with</span> torch.no_grad():</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> p <span class="kw">in</span> learn.model.parameters():</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>                p.grad <span class="op">*=</span> <span class="va">self</span>.momentum</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>cbs <span class="op">=</span> [MetricsCB(), DeviceCB(), ProgressCB(plot<span class="op">=</span><span class="va">True</span>), MomentumCB()]</span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> AutoencoderTrainer(</span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>    get_ae_model(),</span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>    dls,</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>    F.mse_loss,</span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>    lr<span class="op">=</span><span class="fl">0.01</span>,</span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>    cbs<span class="op">=</span>cbs,</span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>    opt_func<span class="op">=</span>torch.optim.AdamW,</span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a>).fit(<span class="dv">2</span>)</span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a>viz(model, xbt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th">loss</th>
+<th data-quarto-table-cell-role="th">epoch</th>
+<th data-quarto-table-cell-role="th">train</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0.875</td>
+<td>0</td>
+<td>train</td>
+</tr>
+<tr class="even">
+<td>0.718</td>
+<td>0</td>
+<td>eval</td>
+</tr>
+<tr class="odd">
+<td>0.706</td>
+<td>1</td>
+<td>train</td>
+</tr>
+<tr class="even">
+<td>0.689</td>
+<td>1</td>
+<td>eval</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="08_learner_files/figure-html/cell-27-output-3.png" class="img-fluid"></p>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>CPU times: user 22 s, sys: 104 ms, total: 22.1 s
+Wall time: 22.2 s</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="08_learner_files/figure-html/cell-27-output-5.png" class="img-fluid"></p>
+</div>
+</div>
+<p>Not especially impressive.</p>
+<p>What about using the automated learning rate finder?</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L384" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="to_cpu" class="level3">
+<h3 class="anchored" data-anchor-id="to_cpu">to_cpu</h3>
+<blockquote class="blockquote">
+<pre><code> to_cpu (x)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L395" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="lrfindercb" class="level3">
+<h3 class="anchored" data-anchor-id="lrfindercb">LRFinderCB</h3>
+<blockquote class="blockquote">
+<pre><code> LRFinderCB (gamma=1.3, max_mult=3)</code></pre>
+</blockquote>
+<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<hr>
+<p><a href="https://github.com/fastai/nbdev/blob/master/nbdev/showdoc.py#LNone" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="show_doc" class="level3">
+<h3 class="anchored" data-anchor-id="show_doc">show_doc</h3>
+<blockquote class="blockquote">
+<pre><code> show_doc (sym, renderer=None, name:str|None=None, title_level:int=3)</code></pre>
+</blockquote>
+<p>Show signature and docstring for <code>sym</code></p>
+<table class="table">
+<colgroup>
+<col style="width: 6%">
+<col style="width: 25%">
+<col style="width: 34%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Default</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>sym</td>
+<td></td>
+<td></td>
+<td>Symbol to document</td>
+</tr>
+<tr class="even">
+<td>renderer</td>
+<td>NoneType</td>
+<td>None</td>
+<td>Optional renderer (defaults to markdown)</td>
+</tr>
+<tr class="odd">
+<td>name</td>
+<td>str | None</td>
+<td>None</td>
+<td>Optionally override displayed name of <code>sym</code></td>
+</tr>
+<tr class="even">
+<td>title_level</td>
+<td>int</td>
+<td>3</td>
+<td>Heading level to use for symbol name</td>
+</tr>
+</tbody>
+</table>
+<div class="cell" data-execution_count="27">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> AutoencoderTrainer(</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    get_ae_model(),</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    dls,</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    F.mse_loss,</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    lr<span class="op">=</span><span class="fl">1e-5</span>,</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    cbs<span class="op">=</span>cbs,</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>    opt_func<span class="op">=</span>torch.optim.AdamW,</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>).lr_find()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+    <div>
+      <progress value="2" class="" max="10" style="width:300px; height:20px; vertical-align: middle;"></progress>
+      20.00% [2/10 00:17&lt;01:09]
+    </div>
+    
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th">loss</th>
+<th data-quarto-table-cell-role="th">epoch</th>
+<th data-quarto-table-cell-role="th">train</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1.249</td>
+<td>0</td>
+<td>train</td>
+</tr>
+<tr class="even">
+<td>1.026</td>
+<td>1</td>
+<td>train</td>
+</tr>
+</tbody>
+</table>
+<p>
+
+    </p><div>
+      <progress value="18" class="" max="30" style="width:300px; height:20px; vertical-align: middle;"></progress>
+      60.00% [18/30 00:05&lt;00:03 1.035]
+    </div>
+    
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/home/jeremy/micromamba/envs/slowai/lib/python3.11/site-packages/torchmetrics/utilities/prints.py:43: UserWarning: Encountered `nan` values in tensor. Will be removed.
+  warnings.warn(*args, **kwargs)  # noqa: B028</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="08_learner_files/figure-html/cell-31-output-4.png" class="img-fluid"></p>
+</div>
+</div>
+<p>It looks like 1e-2 is a good learning rate.</p>
+<div class="cell" data-execution_count="28">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>cbs <span class="op">=</span> [MetricsCB(), DeviceCB(), ProgressCB(plot<span class="op">=</span><span class="va">True</span>), MomentumCB()]</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> AutoencoderTrainer(</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    get_ae_model(),</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    dls,</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    F.mse_loss,</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>    lr<span class="op">=</span><span class="fl">1e-2</span>,</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>    cbs<span class="op">=</span>cbs,</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    opt_func<span class="op">=</span>torch.optim.AdamW,</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>).fit(<span class="dv">2</span>)</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>viz(model, xbt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th">loss</th>
+<th data-quarto-table-cell-role="th">epoch</th>
+<th data-quarto-table-cell-role="th">train</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0.985</td>
+<td>0</td>
+<td>train</td>
+</tr>
+<tr class="even">
+<td>0.731</td>
+<td>0</td>
+<td>eval</td>
+</tr>
+<tr class="odd">
+<td>0.631</td>
+<td>1</td>
+<td>train</td>
+</tr>
+<tr class="even">
+<td>0.593</td>
+<td>1</td>
+<td>eval</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="08_learner_files/figure-html/cell-32-output-3.png" class="img-fluid"></p>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="08_learner_files/figure-html/cell-32-output-4.png" class="img-fluid"></p>
+</div>
+</div>
+<p>Again, not especially impressive.</p>
+<p>We’ll write some tool to diagnose model issues in the next notebook.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

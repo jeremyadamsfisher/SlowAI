@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Exploring the 🤗 dataset API and writing some convenience functions for viz">
+
+<title>slowai - Data and visualizations</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="slowai - Data and visualizations">
+<meta property="og:description" content="Exploring the 🤗 dataset API and writing some convenience functions for viz">
+<meta property="og:image" content="https://jeremy.github.io/slowai/05_datasets_files/figure-html/cell-4-output-1.png">
+<meta property="og:site-name" content="slowai">
+<meta property="og:image:height" content="28">
+<meta property="og:image:width" content="28">
+<meta name="twitter:title" content="slowai - Data and visualizations">
+<meta name="twitter:description" content="Exploring the 🤗 dataset API and writing some convenience functions for viz">
+<meta name="twitter:image" content="https://jeremy.github.io/slowai/05_datasets_files/figure-html/cell-4-output-1.png">
+<meta name="twitter:image-height" content="28">
+<meta name="twitter:image-width" content="28">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">slowai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/jeremy/slowai" rel="" target=""><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./datasets.html">Data and visualizations</a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SlowAI</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Course overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./diving_deeper.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Diving Deeper</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./diving_deeper_homework.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Diving Deeper, homework</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Clustering</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./calculus.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Calculus and Backprop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./minibatch_training.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Minibatch training</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./datasets.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Data and visualizations</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./convs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Convolutions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./autoencoders.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Autoencoders</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./learner.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Learner</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./activations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Activation Statistics</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./initializations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Initializations</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#huggingface-datasets" id="toc-huggingface-datasets" class="nav-link active" data-scroll-target="#huggingface-datasets">Huggingface Datasets</a>
+  <ul>
+  <li><a href="#inplace" id="toc-inplace" class="nav-link" data-scroll-target="#inplace">inplace</a></li>
+  </ul></li>
+  <li><a href="#plotting" id="toc-plotting" class="nav-link" data-scroll-target="#plotting">Plotting</a>
+  <ul>
+  <li><a href="#subplots" id="toc-subplots" class="nav-link" data-scroll-target="#subplots">subplots</a></li>
+  <li><a href="#show_images" id="toc-show_images" class="nav-link" data-scroll-target="#show_images">show_images</a></li>
+  <li><a href="#show_image" id="toc-show_image" class="nav-link" data-scroll-target="#show_image">show_image</a></li>
+  <li><a href="#get_grid" id="toc-get_grid" class="nav-link" data-scroll-target="#get_grid">get_grid</a></li>
+  <li><a href="#subplots-1" id="toc-subplots-1" class="nav-link" data-scroll-target="#subplots-1">subplots</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/jeremy/slowai/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Data and visualizations</h1>
+</div>
+
+<div>
+  <div class="description">
+    Exploring the 🤗 dataset API and writing some convenience functions for viz
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<p>Adapted from:</p>
+<ul>
+<li><a href="https://youtu.be/veqj0DsZSXU?si=TIBU6N98yZhR9PrG&amp;t=3674">https://youtu.be/veqj0DsZSXU?si=TIBU6N98yZhR9PrG&amp;t=3674</a></li>
+</ul>
+<p>This is, again, a topic I already know a lot about so I’m going through this notebook as quickly as possible.</p>
+<section id="huggingface-datasets" class="level2">
+<h2 class="anchored" data-anchor-id="huggingface-datasets">Huggingface Datasets</h2>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>dsd <span class="op">=</span> load_dataset(<span class="st">"fashion_mnist"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>dsd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<pre><code>DatasetDict({
+    train: Dataset({
+        features: ['image', 'label'],
+        num_rows: 60000
+    })
+    test: Dataset({
+        features: ['image', 'label'],
+        num_rows: 10000
+    })
+})</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>x, y <span class="op">=</span> dsd.column_names[<span class="st">"train"</span>]</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>x, y</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<pre><code>('image', 'label')</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>trn <span class="op">=</span> dsd[<span class="st">"train"</span>]</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>example <span class="op">=</span> trn[<span class="dv">0</span>]</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>xb <span class="op">=</span> example[x]</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>yb <span class="op">=</span> example[y]</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>xb</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="5">
+<p><img src="05_datasets_files/figure-html/cell-4-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>y_feats <span class="op">=</span> trn.features[y]</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>y_feats.int2str(example[y])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="6">
+<pre><code>'Ankle boot'</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> collate_fn(b):</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">dict</span>(</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span>torch.stack([T.to_tensor(example[x]) <span class="cf">for</span> example <span class="kw">in</span> b]),</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        y<span class="op">=</span>torch.tensor([example[y] <span class="cf">for</span> example <span class="kw">in</span> b]),</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>dl <span class="op">=</span> DataLoader(trn, collate_fn<span class="op">=</span>collate_fn, batch_size<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>out <span class="op">=</span> <span class="bu">next</span>(<span class="bu">iter</span>(dl))</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>out[<span class="st">"x"</span>].shape, out[<span class="st">"y"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<pre><code>(torch.Size([16, 1, 28, 28]),
+ tensor([9, 0, 0, 3, 0, 2, 7, 2, 5, 5, 0, 9, 5, 5, 7, 9]))</code></pre>
+</div>
+</div>
+<p>This is the only tip I thought was interesting from the first hour. You can use this to avoid a <code>return</code>.</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/datasets.py#L20" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="inplace" class="level3">
+<h3 class="anchored" data-anchor-id="inplace">inplace</h3>
+<blockquote class="blockquote">
+<pre><code> inplace (f)</code></pre>
+</blockquote>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="at">@inplace</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> transformi(batch):</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    batch[<span class="st">"image"</span>] <span class="op">=</span> [T.to_tensor(example) <span class="cf">for</span> example <span class="kw">in</span> batch[<span class="st">"image"</span>]]</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>t_trn <span class="op">=</span> trn.with_transform(transformi)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>t_trn[<span class="dv">0</span>][<span class="st">"image"</span>].shape, t_trn[<span class="dv">0</span>][<span class="st">"label"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="9">
+<pre><code>(torch.Size([1, 28, 28]), 9)</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="plotting" class="level2">
+<h2 class="anchored" data-anchor-id="plotting">Plotting</h2>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>b <span class="op">=</span> t_trn[<span class="dv">0</span>]</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>xb <span class="op">=</span> b[<span class="st">"image"</span>]</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>plt.imshow(xb.squeeze())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="10">
+<pre><code>&lt;matplotlib.image.AxesImage at 0x7f4649481450&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="05_datasets_files/figure-html/cell-9-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<p>We’ll copy-and-paste some of the plotting convenience functions</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/datasets.py#L49" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="subplots" class="level3">
+<h3 class="anchored" data-anchor-id="subplots">subplots</h3>
+<blockquote class="blockquote">
+<pre><code> subplots (nrows:int=1, ncols:int=1, figsize:tuple=None, imsize:int=3,
+           suptitle:str=None,
+           sharex:"bool|Literal['none','all','row','col']"=False,
+           sharey:"bool|Literal['none','all','row','col']"=False,
+           squeeze:bool=True, width_ratios:Sequence[float]|None=None,
+           height_ratios:Sequence[float]|None=None,
+           subplot_kw:dict[str,Any]|None=None,
+           gridspec_kw:dict[str,Any]|None=None, **kwargs)</code></pre>
+</blockquote>
+<p>A figure and set of subplots to display images of <code>imsize</code> inches</p>
+<table class="table">
+<colgroup>
+<col style="width: 6%">
+<col style="width: 25%">
+<col style="width: 34%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Default</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>nrows</td>
+<td>int</td>
+<td>1</td>
+<td>Number of rows in returned axes grid</td>
+</tr>
+<tr class="even">
+<td>ncols</td>
+<td>int</td>
+<td>1</td>
+<td>Number of columns in returned axes grid</td>
+</tr>
+<tr class="odd">
+<td>figsize</td>
+<td>tuple</td>
+<td>None</td>
+<td>Width, height in inches of the returned figure</td>
+</tr>
+<tr class="even">
+<td>imsize</td>
+<td>int</td>
+<td>3</td>
+<td>Size (in inches) of images that will be displayed in the returned figure</td>
+</tr>
+<tr class="odd">
+<td>suptitle</td>
+<td>str</td>
+<td>None</td>
+<td>Title to be set to returned figure</td>
+</tr>
+<tr class="even">
+<td>sharex</td>
+<td>bool | Literal[‘none’, ‘all’, ‘row’, ‘col’]</td>
+<td>False</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>sharey</td>
+<td>bool | Literal[‘none’, ‘all’, ‘row’, ‘col’]</td>
+<td>False</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>squeeze</td>
+<td>bool</td>
+<td>True</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>width_ratios</td>
+<td>Sequence[float] | None</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>height_ratios</td>
+<td>Sequence[float] | None</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>subplot_kw</td>
+<td>dict[str, Any] | None</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>gridspec_kw</td>
+<td>dict[str, Any] | None</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>kwargs</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><code>delegates</code> is a nice feature that creates the correct documentation for <code>kwargs</code></p>
+<div class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>subplots?</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div class="ansi-escaped-output">
+<pre><span class="ansi-red-fg">Signature:</span>
+subplots<span class="ansi-blue-fg">(</span>
+    nrows<span class="ansi-blue-fg">:</span> int <span class="ansi-blue-fg">=</span> <span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">,</span>
+    ncols<span class="ansi-blue-fg">:</span> int <span class="ansi-blue-fg">=</span> <span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">,</span>
+    figsize<span class="ansi-blue-fg">:</span> tuple <span class="ansi-blue-fg">=</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">,</span>
+    imsize<span class="ansi-blue-fg">:</span> int <span class="ansi-blue-fg">=</span> <span class="ansi-cyan-fg">3</span><span class="ansi-blue-fg">,</span>
+    suptitle<span class="ansi-blue-fg">:</span> str <span class="ansi-blue-fg">=</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">,</span>
+    <span class="ansi-blue-fg">*</span><span class="ansi-blue-fg">,</span>
+    sharex<span class="ansi-blue-fg">:</span> <span class="ansi-blue-fg">"bool | Literal['none', 'all', 'row', 'col']"</span> <span class="ansi-blue-fg">=</span> <span class="ansi-green-fg">False</span><span class="ansi-blue-fg">,</span>
+    sharey<span class="ansi-blue-fg">:</span> <span class="ansi-blue-fg">"bool | Literal['none', 'all', 'row', 'col']"</span> <span class="ansi-blue-fg">=</span> <span class="ansi-green-fg">False</span><span class="ansi-blue-fg">,</span>
+    squeeze<span class="ansi-blue-fg">:</span> <span class="ansi-blue-fg">'bool'</span> <span class="ansi-blue-fg">=</span> <span class="ansi-green-fg">True</span><span class="ansi-blue-fg">,</span>
+    width_ratios<span class="ansi-blue-fg">:</span> <span class="ansi-blue-fg">'Sequence[float] | None'</span> <span class="ansi-blue-fg">=</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">,</span>
+    height_ratios<span class="ansi-blue-fg">:</span> <span class="ansi-blue-fg">'Sequence[float] | None'</span> <span class="ansi-blue-fg">=</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">,</span>
+    subplot_kw<span class="ansi-blue-fg">:</span> <span class="ansi-blue-fg">'dict[str, Any] | None'</span> <span class="ansi-blue-fg">=</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">,</span>
+    gridspec_kw<span class="ansi-blue-fg">:</span> <span class="ansi-blue-fg">'dict[str, Any] | None'</span> <span class="ansi-blue-fg">=</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">,</span>
+    <span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">,</span>
+<span class="ansi-blue-fg">)</span>
+<span class="ansi-red-fg">Docstring:</span> A figure and set of subplots to display images of `imsize` inches
+<span class="ansi-red-fg">File:</span>      /tmp/ipykernel_22296/3433216597.py
+<span class="ansi-red-fg">Type:</span>      function</pre>
+</div>
+</div>
+</div>
+<p>I’m straight up just stealing these from the FastAI notebooks 😈</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/overview.py#L31" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="show_images" class="level3">
+<h3 class="anchored" data-anchor-id="show_images">show_images</h3>
+<blockquote class="blockquote">
+<pre><code> show_images (ims:list, nrows:Optional[int]=None,
+              ncols:Optional[int]=None, titles:Optional[list]=None,
+              figsize:tuple=None, imsize:int=3, suptitle:str=None,
+              sharex:"bool|Literal['none','all','row','col']"=False,
+              sharey:"bool|Literal['none','all','row','col']"=False,
+              squeeze:bool=True, width_ratios:Sequence[float]|None=None,
+              height_ratios:Sequence[float]|None=None,
+              subplot_kw:dict[str,Any]|None=None,
+              gridspec_kw:dict[str,Any]|None=None)</code></pre>
+</blockquote>
+<p>Show all images <code>ims</code> as subplots with <code>rows</code> using <code>titles</code></p>
+<table class="table">
+<colgroup>
+<col style="width: 6%">
+<col style="width: 25%">
+<col style="width: 34%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Default</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ims</td>
+<td>list</td>
+<td></td>
+<td>Images to show</td>
+</tr>
+<tr class="even">
+<td>nrows</td>
+<td>Optional</td>
+<td>None</td>
+<td>Number of rows in grid</td>
+</tr>
+<tr class="odd">
+<td>ncols</td>
+<td>Optional</td>
+<td>None</td>
+<td>Number of columns in grid (auto-calculated if None)</td>
+</tr>
+<tr class="even">
+<td>titles</td>
+<td>Optional</td>
+<td>None</td>
+<td>Optional list of titles for each image</td>
+</tr>
+<tr class="odd">
+<td>figsize</td>
+<td>tuple</td>
+<td>None</td>
+<td>Width, height in inches of the returned figure</td>
+</tr>
+<tr class="even">
+<td>imsize</td>
+<td>int</td>
+<td>3</td>
+<td>Size (in inches) of images that will be displayed in the returned figure</td>
+</tr>
+<tr class="odd">
+<td>suptitle</td>
+<td>str</td>
+<td>None</td>
+<td>Title to be set to returned figure</td>
+</tr>
+<tr class="even">
+<td>sharex</td>
+<td>bool | Literal[‘none’, ‘all’, ‘row’, ‘col’]</td>
+<td>False</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>sharey</td>
+<td>bool | Literal[‘none’, ‘all’, ‘row’, ‘col’]</td>
+<td>False</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>squeeze</td>
+<td>bool</td>
+<td>True</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>width_ratios</td>
+<td>Sequence[float] | None</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>height_ratios</td>
+<td>Sequence[float] | None</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>subplot_kw</td>
+<td>dict[str, Any] | None</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>gridspec_kw</td>
+<td>dict[str, Any] | None</td>
+<td>None</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<pre><code>/home/jeremy/micromamba/envs/slowai/lib/python3.11/site-packages/fastcore/docscrape.py:225: UserWarning: Unknown section Other Parameters
+  else: warn(msg)
+/home/jeremy/micromamba/envs/slowai/lib/python3.11/site-packages/fastcore/docscrape.py:225: UserWarning: Unknown section See Also
+  else: warn(msg)
+/home/jeremy/micromamba/envs/slowai/lib/python3.11/site-packages/fastcore/docscrape.py:225: UserWarning: Unknown section Notes
+  else: warn(msg)</code></pre>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/overview.py#L42" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="show_image" class="level3">
+<h3 class="anchored" data-anchor-id="show_image">show_image</h3>
+<blockquote class="blockquote">
+<pre><code> show_image (im, ax=None, figsize=None, title=None, noframe=True,
+             cmap=None, norm=None, aspect=None, interpolation=None,
+             alpha=None, vmin=None, vmax=None, origin=None, extent=None,
+             interpolation_stage=None, filternorm=True, filterrad=4.0,
+             resample=None, url=None, data=None)</code></pre>
+</blockquote>
+<p>Show a PIL or PyTorch image on <code>ax</code>.</p>
+<table class="table">
+<colgroup>
+<col style="width: 6%">
+<col style="width: 25%">
+<col style="width: 34%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Default</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>im</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>ax</td>
+<td>NoneType</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>figsize</td>
+<td>NoneType</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>title</td>
+<td>NoneType</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>noframe</td>
+<td>bool</td>
+<td>True</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>cmap</td>
+<td>NoneType</td>
+<td>None</td>
+<td>The Colormap instance or registered colormap name used to map scalar data<br>to colors.<br><br>This parameter is ignored if <em>X</em> is RGB(A).</td>
+</tr>
+<tr class="odd">
+<td>norm</td>
+<td>NoneType</td>
+<td>None</td>
+<td>The normalization method used to scale scalar data to the [0, 1] range<br>before mapping to colors using <em>cmap</em>. By default, a linear scaling is<br>used, mapping the lowest value to 0 and the highest to 1.<br><br>If given, this can be one of the following:<br><br>- An instance of <code>.Normalize</code> or one of its subclasses<br> (see :ref:<code>colormapnorms</code>).<br>- A scale name, i.e.&nbsp;one of “linear”, “log”, “symlog”, “logit”, etc. For a<br> list of available scales, call <code>matplotlib.scale.get_scale_names()</code>.<br> In that case, a suitable <code>.Normalize</code> subclass is dynamically generated<br> and instantiated.<br><br>This parameter is ignored if <em>X</em> is RGB(A).</td>
+</tr>
+<tr class="even">
+<td>aspect</td>
+<td>NoneType</td>
+<td>None</td>
+<td>The aspect ratio of the Axes. This parameter is particularly<br>relevant for images since it determines whether data pixels are<br>square.<br><br>This parameter is a shortcut for explicitly calling<br><code>.Axes.set_aspect</code>. See there for further details.<br><br>- ‘equal’: Ensures an aspect ratio of 1. Pixels will be square<br> (unless pixel sizes are explicitly made non-square in data<br> coordinates using <em>extent</em>).<br>- ‘auto’: The Axes is kept fixed and the aspect is adjusted so<br> that the data fit in the Axes. In general, this will result in<br> non-square pixels.<br><br>Normally, None (the default) means to use :rc:<code>image.aspect</code>. However, if<br>the image uses a transform that does not contain the axes data transform,<br>then None means to not modify the axes aspect at all (in that case, directly<br>call <code>.Axes.set_aspect</code> if desired).</td>
+</tr>
+<tr class="odd">
+<td>interpolation</td>
+<td>NoneType</td>
+<td>None</td>
+<td>The interpolation method used.<br><br>Supported values are ‘none’, ‘antialiased’, ‘nearest’, ‘bilinear’,<br>‘bicubic’, ‘spline16’, ‘spline36’, ‘hanning’, ‘hamming’, ‘hermite’,<br>‘kaiser’, ‘quadric’, ‘catrom’, ‘gaussian’, ‘bessel’, ‘mitchell’,<br>‘sinc’, ‘lanczos’, ‘blackman’.<br><br>The data <em>X</em> is resampled to the pixel size of the image on the<br>figure canvas, using the interpolation method to either up- or<br>downsample the data.<br><br>If <em>interpolation</em> is ‘none’, then for the ps, pdf, and svg<br>backends no down- or upsampling occurs, and the image data is<br>passed to the backend as a native image. Note that different ps,<br>pdf, and svg viewers may display these raw pixels differently. On<br>other backends, ‘none’ is the same as ‘nearest’.<br><br>If <em>interpolation</em> is the default ‘antialiased’, then ‘nearest’<br>interpolation is used if the image is upsampled by more than a<br>factor of three (i.e.&nbsp;the number of display pixels is at least<br>three times the size of the data array). If the upsampling rate is<br>smaller than 3, or the image is downsampled, then ‘hanning’<br>interpolation is used to act as an anti-aliasing filter, unless the<br>image happens to be upsampled by exactly a factor of two or one.<br><br>See<br>:doc:<code>/gallery/images_contours_and_fields/interpolation_methods</code><br>for an overview of the supported interpolation methods, and<br>:doc:<code>/gallery/images_contours_and_fields/image_antialiasing</code> for<br>a discussion of image antialiasing.<br><br>Some interpolation methods require an additional radius parameter,<br>which can be set by <em>filterrad</em>. Additionally, the antigrain image<br>resize filter is controlled by the parameter <em>filternorm</em>.</td>
+</tr>
+<tr class="even">
+<td>alpha</td>
+<td>NoneType</td>
+<td>None</td>
+<td>The alpha blending value, between 0 (transparent) and 1 (opaque).<br>If <em>alpha</em> is an array, the alpha blending values are applied pixel<br>by pixel, and <em>alpha</em> must have the same shape as <em>X</em>.</td>
+</tr>
+<tr class="odd">
+<td>vmin</td>
+<td>NoneType</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>vmax</td>
+<td>NoneType</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>origin</td>
+<td>NoneType</td>
+<td>None</td>
+<td>Place the [0, 0] index of the array in the upper left or lower<br>left corner of the Axes. The convention (the default) ‘upper’ is<br>typically used for matrices and images.<br><br>Note that the vertical axis points upward for ‘lower’<br>but downward for ‘upper’.<br><br>See the :ref:<code>imshow_extent</code> tutorial for<br>examples and a more detailed description.</td>
+</tr>
+<tr class="even">
+<td>extent</td>
+<td>NoneType</td>
+<td>None</td>
+<td>The bounding box in data coordinates that the image will fill.<br>These values may be unitful and match the units of the Axes.<br>The image is stretched individually along x and y to fill the box.<br><br>The default extent is determined by the following conditions.<br>Pixels have unit size in data coordinates. Their centers are on<br>integer coordinates, and their center coordinates range from 0 to<br>columns-1 horizontally and from 0 to rows-1 vertically.<br><br>Note that the direction of the vertical axis and thus the default<br>values for top and bottom depend on <em>origin</em>:<br><br>- For <code>origin == 'upper'</code> the default is<br> <code>(-0.5, numcols-0.5, numrows-0.5, -0.5)</code>.<br>- For <code>origin == 'lower'</code> the default is<br> <code>(-0.5, numcols-0.5, -0.5, numrows-0.5)</code>.<br><br>See the :ref:<code>imshow_extent</code> tutorial for<br>examples and a more detailed description.</td>
+</tr>
+<tr class="odd">
+<td>interpolation_stage</td>
+<td>NoneType</td>
+<td>None</td>
+<td>If ‘data’, interpolation<br>is carried out on the data provided by the user. If ‘rgba’, the<br>interpolation is carried out after the colormapping has been<br>applied (visual interpolation).</td>
+</tr>
+<tr class="even">
+<td>filternorm</td>
+<td>bool</td>
+<td>True</td>
+<td>A parameter for the antigrain image resize filter (see the<br>antigrain documentation). If <em>filternorm</em> is set, the filter<br>normalizes integer values and corrects the rounding errors. It<br>doesn’t do anything with the source floating point values, it<br>corrects only integers according to the rule of 1.0 which means<br>that any sum of pixel weights must be equal to 1.0. So, the<br>filter function must produce a graph of the proper shape.</td>
+</tr>
+<tr class="odd">
+<td>filterrad</td>
+<td>float</td>
+<td>4.0</td>
+<td>The filter radius for filters that have a radius parameter, i.e.<br>when interpolation is one of: ‘sinc’, ‘lanczos’ or ‘blackman’.</td>
+</tr>
+<tr class="even">
+<td>resample</td>
+<td>NoneType</td>
+<td>None</td>
+<td>When <em>True</em>, use a full resampling method. When <em>False</em>, only<br>resample when the output image is larger than the input image.</td>
+</tr>
+<tr class="odd">
+<td>url</td>
+<td>NoneType</td>
+<td>None</td>
+<td>Set the url of the created <code>.AxesImage</code>. See <code>.Artist.set_url</code>.</td>
+</tr>
+<tr class="even">
+<td>data</td>
+<td>NoneType</td>
+<td>None</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/datasets.py#L69" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="get_grid" class="level3">
+<h3 class="anchored" data-anchor-id="get_grid">get_grid</h3>
+<blockquote class="blockquote">
+<pre><code> get_grid (n:int, nrows:int=None, ncols:int=None, title:str=None,
+           weight:str='bold', size:int=14, figsize:tuple=None,
+           imsize:int=3, suptitle:str=None,
+           sharex:"bool|Literal['none','all','row','col']"=False,
+           sharey:"bool|Literal['none','all','row','col']"=False,
+           squeeze:bool=True, width_ratios:Sequence[float]|None=None,
+           height_ratios:Sequence[float]|None=None,
+           subplot_kw:dict[str,Any]|None=None,
+           gridspec_kw:dict[str,Any]|None=None)</code></pre>
+</blockquote>
+<p>Return a grid of <code>n</code> axes, <code>rows</code> by <code>cols</code></p>
+<table class="table">
+<colgroup>
+<col style="width: 6%">
+<col style="width: 25%">
+<col style="width: 34%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Default</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>n</td>
+<td>int</td>
+<td></td>
+<td>Number of axes</td>
+</tr>
+<tr class="even">
+<td>nrows</td>
+<td>int</td>
+<td>None</td>
+<td>Number of rows, defaulting to <code>int(math.sqrt(n))</code></td>
+</tr>
+<tr class="odd">
+<td>ncols</td>
+<td>int</td>
+<td>None</td>
+<td>Number of columns, defaulting to <code>ceil(n/rows)</code></td>
+</tr>
+<tr class="even">
+<td>title</td>
+<td>str</td>
+<td>None</td>
+<td>If passed, title set to the figure</td>
+</tr>
+<tr class="odd">
+<td>weight</td>
+<td>str</td>
+<td>bold</td>
+<td>Title font weight</td>
+</tr>
+<tr class="even">
+<td>size</td>
+<td>int</td>
+<td>14</td>
+<td>Title font size</td>
+</tr>
+<tr class="odd">
+<td>figsize</td>
+<td>tuple</td>
+<td>None</td>
+<td>Width, height in inches of the returned figure</td>
+</tr>
+<tr class="even">
+<td>imsize</td>
+<td>int</td>
+<td>3</td>
+<td>Size (in inches) of images that will be displayed in the returned figure</td>
+</tr>
+<tr class="odd">
+<td>suptitle</td>
+<td>str</td>
+<td>None</td>
+<td>Title to be set to returned figure</td>
+</tr>
+<tr class="even">
+<td>sharex</td>
+<td>bool | Literal[‘none’, ‘all’, ‘row’, ‘col’]</td>
+<td>False</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>sharey</td>
+<td>bool | Literal[‘none’, ‘all’, ‘row’, ‘col’]</td>
+<td>False</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>squeeze</td>
+<td>bool</td>
+<td>True</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>width_ratios</td>
+<td>Sequence[float] | None</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>height_ratios</td>
+<td>Sequence[float] | None</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>subplot_kw</td>
+<td>dict[str, Any] | None</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>gridspec_kw</td>
+<td>dict[str, Any] | None</td>
+<td>None</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/datasets.py#L49" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="subplots-1" class="level3">
+<h3 class="anchored" data-anchor-id="subplots-1">subplots</h3>
+<blockquote class="blockquote">
+<pre><code> subplots (nrows:int=1, ncols:int=1, figsize:tuple=None, imsize:int=3,
+           suptitle:str=None,
+           sharex:"bool|Literal['none','all','row','col']"=False,
+           sharey:"bool|Literal['none','all','row','col']"=False,
+           squeeze:bool=True, width_ratios:Sequence[float]|None=None,
+           height_ratios:Sequence[float]|None=None,
+           subplot_kw:dict[str,Any]|None=None,
+           gridspec_kw:dict[str,Any]|None=None, **kwargs)</code></pre>
+</blockquote>
+<p>A figure and set of subplots to display images of <code>imsize</code> inches</p>
+<table class="table">
+<colgroup>
+<col style="width: 6%">
+<col style="width: 25%">
+<col style="width: 34%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Default</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>nrows</td>
+<td>int</td>
+<td>1</td>
+<td>Number of rows in returned axes grid</td>
+</tr>
+<tr class="even">
+<td>ncols</td>
+<td>int</td>
+<td>1</td>
+<td>Number of columns in returned axes grid</td>
+</tr>
+<tr class="odd">
+<td>figsize</td>
+<td>tuple</td>
+<td>None</td>
+<td>Width, height in inches of the returned figure</td>
+</tr>
+<tr class="even">
+<td>imsize</td>
+<td>int</td>
+<td>3</td>
+<td>Size (in inches) of images that will be displayed in the returned figure</td>
+</tr>
+<tr class="odd">
+<td>suptitle</td>
+<td>str</td>
+<td>None</td>
+<td>Title to be set to returned figure</td>
+</tr>
+<tr class="even">
+<td>sharex</td>
+<td>bool | Literal[‘none’, ‘all’, ‘row’, ‘col’]</td>
+<td>False</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>sharey</td>
+<td>bool | Literal[‘none’, ‘all’, ‘row’, ‘col’]</td>
+<td>False</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>squeeze</td>
+<td>bool</td>
+<td>True</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>width_ratios</td>
+<td>Sequence[float] | None</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>height_ratios</td>
+<td>Sequence[float] | None</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>subplot_kw</td>
+<td>dict[str, Any] | None</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>gridspec_kw</td>
+<td>dict[str, Any] | None</td>
+<td>None</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>kwargs</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<div class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>b <span class="op">=</span> t_trn[:<span class="dv">16</span>]</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>show_images(b[<span class="st">"image"</span>], figsize<span class="op">=</span>(<span class="dv">6</span>, <span class="dv">6</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="05_datasets_files/figure-html/cell-16-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

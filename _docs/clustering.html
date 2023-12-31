@@ -1,0 +1,2365 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Exercising our array programming muscles. We are implementing Mean Shift, which is a good cluster analysis algorithm for data with uniform scale, like survey data where all answers are 1-5.">
+
+<title>slowai - Clustering</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="slowai - Clustering">
+<meta property="og:description" content="Exercising our array programming muscles. We are implementing Mean Shift, which is a good cluster analysis algorithm for data with uniform scale, like survey data where all answers are 1-5.">
+<meta property="og:image" content="https://jeremy.github.io/slowai/02_clustering_files/figure-html/cell-4-output-2.png">
+<meta property="og:site-name" content="slowai">
+<meta property="og:image:height" content="351">
+<meta property="og:image:width" content="357">
+<meta name="twitter:title" content="slowai - Clustering">
+<meta name="twitter:description" content="Exercising our array programming muscles. We are implementing Mean Shift, which is a good cluster analysis algorithm for data with uniform scale, like survey data where all answers are 1-5.">
+<meta name="twitter:image" content="https://jeremy.github.io/slowai/02_clustering_files/figure-html/cell-4-output-2.png">
+<meta name="twitter:image-height" content="351">
+<meta name="twitter:image-width" content="357">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">slowai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/jeremy/slowai" rel="" target=""><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./clustering.html">Clustering</a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SlowAI</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Course overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./diving_deeper.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Diving Deeper</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./diving_deeper_homework.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Diving Deeper, homework</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./clustering.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Clustering</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./calculus.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Calculus and Backprop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./minibatch_training.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Minibatch training</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./datasets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data and visualizations</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./convs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Convolutions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./autoencoders.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Autoencoders</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./learner.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Learner</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./activations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Activation Statistics</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./initializations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Initializations</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#norms" id="toc-norms" class="nav-link active" data-scroll-target="#norms">Norms</a></li>
+  <li><a href="#create-synthetic-data" id="toc-create-synthetic-data" class="nav-link" data-scroll-target="#create-synthetic-data">Create synthetic data</a></li>
+  <li><a href="#mean-shift" id="toc-mean-shift" class="nav-link" data-scroll-target="#mean-shift">Mean Shift</a></li>
+  <li><a href="#how-do-we-gpu-accelerate-this" id="toc-how-do-we-gpu-accelerate-this" class="nav-link" data-scroll-target="#how-do-we-gpu-accelerate-this">How do we GPU accelerate this?</a>
+  <ul>
+  <li><a href="#homework" id="toc-homework" class="nav-link" data-scroll-target="#homework">Homework</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/jeremy/slowai/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Clustering</h1>
+</div>
+
+<div>
+  <div class="description">
+    Exercising our array programming muscles. We are implementing Mean Shift, which is a good cluster analysis algorithm for data with uniform scale, like survey data where all answers are 1-5.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<p>Adapted from: - https://www.youtube.com/watch?v=_xIzPbCgutY&amp;list=PLfYUBJiXbdtRUvTUYpLdfHHp9a58nWVXP&amp;index=4</p>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> IPython.display <span class="im">import</span> HTML</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib.animation <span class="im">import</span> FuncAnimation</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch <span class="im">import</span> tensor</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch.distributions.multivariate_normal <span class="im">import</span> MultivariateNormal</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">42</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<pre><code>&lt;torch._C.Generator at 0x107768f90&gt;</code></pre>
+</div>
+</div>
+<section id="norms" class="level1">
+<h1>Norms</h1>
+<ul>
+<li>M.A.E. = <span class="math inline">\(|\Delta x | + |\Delta y |\)</span></li>
+<li>M.S.E. = $x ^2 + y ^2 = ||v||_2 = = $</li>
+<li>R.M.S.E. $= = ||v||^2_2 = |v| = |v|_2 $</li>
+</ul>
+</section>
+<section id="create-synthetic-data" class="level1">
+<h1>Create synthetic data</h1>
+<div class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>n_clusters <span class="op">=</span> <span class="dv">4</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>n_samples <span class="op">=</span> <span class="dv">256</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> sample(mean):</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    covariance <span class="op">=</span> torch.diag(tensor([<span class="fl">5.0</span>, <span class="fl">5.0</span>], dtype<span class="op">=</span>torch.<span class="bu">float</span>))</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> MultivariateNormal(mean, covariance).sample((n_samples,))</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>centroids <span class="op">=</span> torch.rand(n_clusters, <span class="dv">2</span>) <span class="op">*</span> <span class="dv">70</span> <span class="op">-</span> <span class="dv">35</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>data_by_centroid <span class="op">=</span> [sample(mean) <span class="cf">for</span> mean <span class="kw">in</span> centroids]</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> torch.cat(data_by_centroid)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">4</span>, <span class="dv">4</span>))</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> subset <span class="kw">in</span> data_by_centroid:</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    ax.scatter(<span class="op">*</span>subset.T, alpha<span class="op">=</span><span class="fl">0.4</span>)</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>ax.scatter(<span class="op">*</span>centroids.T, marker<span class="op">=</span><span class="st">"x"</span>, color<span class="op">=</span><span class="st">"black"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<pre><code>&lt;matplotlib.collections.PathCollection at 0x14a0a3c70&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="02_clustering_files/figure-html/cell-4-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="mean-shift" class="level1">
+<h1>Mean Shift</h1>
+<p>Neat algorithm that has some unique advantages compared to K-means, because it <strong>does not require setting the number of clusters in advance</strong>. It does, however, require a “bandwidth” parameter and that the clusters have a Gaussian falloff.</p>
+<p>The algorithm is as follow:</p>
+<ol type="1">
+<li>For each point, compute the distance between that point and all other points</li>
+<li>Reassign each point as the weighted average for each distance with a Gaussian kernel where the variance is the “bandwidth” hyperparameter</li>
+<li>Repeat until convergence</li>
+</ol>
+<p>The bandwidth should be about a third of the data, so in this case its about 25.</p>
+<div class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>bandwidth <span class="op">=</span> <span class="fl">2.5</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> gaussian(x, mu, sig):</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="fl">1.0</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">/</span> (math.sqrt(<span class="fl">2.0</span> <span class="op">*</span> torch.pi) <span class="op">*</span> sig)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span> torch.exp(<span class="op">-</span>torch.<span class="bu">pow</span>((x <span class="op">-</span> mu) <span class="op">/</span> sig, <span class="fl">2.0</span>) <span class="op">/</span> <span class="dv">2</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> gkernel(x):</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> gaussian(x, mu<span class="op">=</span><span class="dv">0</span>, sig<span class="op">=</span>bandwidth)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> torch.linspace(<span class="dv">0</span>, <span class="dv">10</span>, <span class="dv">100</span>)</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> gkernel(x)</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>ax.plot(x, y)</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>ax.<span class="bu">set</span>(ylabel<span class="op">=</span><span class="st">"$P.D.F.(X)$"</span>, xlabel<span class="op">=</span><span class="st">"$X$"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="5">
+<pre><code>[Text(0, 0.5, '$P.D.F.(X)$'), Text(0.5, 0, '$X$')]</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="02_clustering_files/figure-html/cell-5-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Manipulate a copy of the data</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> data.clone()</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>x, <span class="op">*</span>_ <span class="op">=</span> X</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>x <span class="op">-</span> X</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="6">
+<pre><code>tensor([[ 0.0000,  0.0000],
+        [ 4.5407,  1.0199],
+        [ 4.5527,  1.6327],
+        ...,
+        [47.1212,  9.3284],
+        [50.7346,  6.5993],
+        [44.9273,  8.0535]])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>e <span class="op">=</span> ((x <span class="op">-</span> X) <span class="op">**</span> <span class="dv">2</span>).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>).sqrt()</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>e</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<pre><code>tensor([ 0.0000,  4.6538,  4.8366,  ..., 48.0356, 51.1620, 45.6434])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>weight <span class="op">=</span> gkernel(e)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>weight</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="8">
+<pre><code>tensor([0.1596, 0.0282, 0.0246,  ..., 0.0000, 0.0000, 0.0000])</code></pre>
+</div>
+</div>
+<p>Now, we have the weights and the data, but we need to combine them.</p>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>weight.shape, X.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="9">
+<pre><code>(torch.Size([1024]), torch.Size([1024, 2]))</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This doesn't work</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    weighted_rows <span class="op">=</span> weight <span class="op">*</span> X</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">RuntimeError</span> <span class="im">as</span> e:</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(e)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>The size of tensor a (1024) must match the size of tensor b (2) at non-singleton dimension 1</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This does, such that the weight is copied to both target</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co"># dimensions by broadcasting</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>weighted_rows <span class="op">=</span> weight[:, <span class="va">None</span>] <span class="op">*</span> X</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>weighted_rows</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="11">
+<pre><code>tensor([[4.9080, 4.4652],
+        [0.7397, 0.7607],
+        [0.6435, 0.6471],
+        ...,
+        [-0.0000, 0.0000],
+        [-0.0000, 0.0000],
+        [-0.0000, 0.0000]])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># We need to take a weighted sum, but notice that the weights</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co"># add up to 1200%. We need to normalize.</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>weight.<span class="bu">sum</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="12">
+<pre><code>tensor(12.1010)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>weighted_rows.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">/</span> weight.<span class="bu">sum</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<pre><code>tensor([28.6881, 28.6938])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> data.clone()</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> iteration(X):</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, x <span class="kw">in</span> <span class="bu">enumerate</span>(X):</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>        delta <span class="op">=</span> x <span class="op">-</span> X</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>        dist <span class="op">=</span> torch.einsum(<span class="st">"ij,ij-&gt;i"</span>, delta, delta).sqrt()</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>        weight <span class="op">=</span> gkernel(dist)</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>        weighted_rows <span class="op">=</span> weight[:, <span class="va">None</span>] <span class="op">*</span> X</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>        X[i, :] <span class="op">=</span> weighted_rows.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">/</span> weight.<span class="bu">sum</span>()</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">5</span>):</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>    iteration(X)</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>plt.scatter(<span class="op">*</span>X.T)</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>plt.scatter(<span class="op">*</span>centroids.T, marker<span class="op">=</span><span class="st">"x"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="14">
+<pre><code>&lt;matplotlib.collections.PathCollection at 0x14a232df0&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="02_clustering_files/figure-html/cell-14-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> data.clone()</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> do_one(d):</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> d:</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>        iteration(X)</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    ax.clear()</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    ax.scatter(<span class="op">*</span>X.T)</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    ax.scatter(<span class="op">*</span>centroids.T, marker<span class="op">=</span><span class="st">"x"</span>)</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>anim <span class="op">=</span> FuncAnimation(fig, do_one, frames<span class="op">=</span><span class="dv">5</span>, interval<span class="op">=</span><span class="dv">500</span>, repeat<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>plt.close()</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>HTML(anim.to_jshtml())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="15">
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+<script language="javascript">
+  function isInternetExplorer() {
+    ua = navigator.userAgent;
+    /* MSIE used to detect old browsers and Trident used to newer ones*/
+    return ua.indexOf("MSIE ") > -1 || ua.indexOf("Trident/") > -1;
+  }
+
+  /* Define the Animation class */
+  function Animation(frames, img_id, slider_id, interval, loop_select_id){
+    this.img_id = img_id;
+    this.slider_id = slider_id;
+    this.loop_select_id = loop_select_id;
+    this.interval = interval;
+    this.current_frame = 0;
+    this.direction = 0;
+    this.timer = null;
+    this.frames = new Array(frames.length);
+
+    for (var i=0; i<frames.length; i++)
+    {
+     this.frames[i] = new Image();
+     this.frames[i].src = frames[i];
+    }
+    var slider = document.getElementById(this.slider_id);
+    slider.max = this.frames.length - 1;
+    if (isInternetExplorer()) {
+        // switch from oninput to onchange because IE <= 11 does not conform
+        // with W3C specification. It ignores oninput and onchange behaves
+        // like oninput. In contrast, Microsoft Edge behaves correctly.
+        slider.setAttribute('onchange', slider.getAttribute('oninput'));
+        slider.setAttribute('oninput', null);
+    }
+    this.set_frame(this.current_frame);
+  }
+
+  Animation.prototype.get_loop_state = function(){
+    var button_group = document[this.loop_select_id].state;
+    for (var i = 0; i < button_group.length; i++) {
+        var button = button_group[i];
+        if (button.checked) {
+            return button.value;
+        }
+    }
+    return undefined;
+  }
+
+  Animation.prototype.set_frame = function(frame){
+    this.current_frame = frame;
+    document.getElementById(this.img_id).src =
+            this.frames[this.current_frame].src;
+    document.getElementById(this.slider_id).value = this.current_frame;
+  }
+
+  Animation.prototype.next_frame = function()
+  {
+    this.set_frame(Math.min(this.frames.length - 1, this.current_frame + 1));
+  }
+
+  Animation.prototype.previous_frame = function()
+  {
+    this.set_frame(Math.max(0, this.current_frame - 1));
+  }
+
+  Animation.prototype.first_frame = function()
+  {
+    this.set_frame(0);
+  }
+
+  Animation.prototype.last_frame = function()
+  {
+    this.set_frame(this.frames.length - 1);
+  }
+
+  Animation.prototype.slower = function()
+  {
+    this.interval /= 0.7;
+    if(this.direction > 0){this.play_animation();}
+    else if(this.direction < 0){this.reverse_animation();}
+  }
+
+  Animation.prototype.faster = function()
+  {
+    this.interval *= 0.7;
+    if(this.direction > 0){this.play_animation();}
+    else if(this.direction < 0){this.reverse_animation();}
+  }
+
+  Animation.prototype.anim_step_forward = function()
+  {
+    this.current_frame += 1;
+    if(this.current_frame < this.frames.length){
+      this.set_frame(this.current_frame);
+    }else{
+      var loop_state = this.get_loop_state();
+      if(loop_state == "loop"){
+        this.first_frame();
+      }else if(loop_state == "reflect"){
+        this.last_frame();
+        this.reverse_animation();
+      }else{
+        this.pause_animation();
+        this.last_frame();
+      }
+    }
+  }
+
+  Animation.prototype.anim_step_reverse = function()
+  {
+    this.current_frame -= 1;
+    if(this.current_frame >= 0){
+      this.set_frame(this.current_frame);
+    }else{
+      var loop_state = this.get_loop_state();
+      if(loop_state == "loop"){
+        this.last_frame();
+      }else if(loop_state == "reflect"){
+        this.first_frame();
+        this.play_animation();
+      }else{
+        this.pause_animation();
+        this.first_frame();
+      }
+    }
+  }
+
+  Animation.prototype.pause_animation = function()
+  {
+    this.direction = 0;
+    if (this.timer){
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  }
+
+  Animation.prototype.play_animation = function()
+  {
+    this.pause_animation();
+    this.direction = 1;
+    var t = this;
+    if (!this.timer) this.timer = setInterval(function() {
+        t.anim_step_forward();
+    }, this.interval);
+  }
+
+  Animation.prototype.reverse_animation = function()
+  {
+    this.pause_animation();
+    this.direction = -1;
+    var t = this;
+    if (!this.timer) this.timer = setInterval(function() {
+        t.anim_step_reverse();
+    }, this.interval);
+  }
+</script>
+
+<style>
+.animation {
+    display: inline-block;
+    text-align: center;
+}
+input[type=range].anim-slider {
+    width: 374px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.anim-buttons {
+    margin: 8px 0px;
+}
+.anim-buttons button {
+    padding: 0;
+    width: 36px;
+}
+.anim-state label {
+    margin-right: 8px;
+}
+.anim-state input {
+    margin: 0;
+    vertical-align: middle;
+}
+</style>
+
+<div class="animation">
+  <img id="_anim_img3020e85d53d94ff0b8571ff5ed90c9ae">
+  <div class="anim-controls">
+    <input id="_anim_slider3020e85d53d94ff0b8571ff5ed90c9ae" type="range" class="anim-slider" name="points" min="0" max="1" step="1" value="0" oninput="anim3020e85d53d94ff0b8571ff5ed90c9ae.set_frame(parseInt(this.value));">
+    <div class="anim-buttons">
+      <button title="Decrease speed" aria-label="Decrease speed" onclick="anim3020e85d53d94ff0b8571ff5ed90c9ae.slower()">
+          <i class="fa fa-minus"></i></button>
+      <button title="First frame" aria-label="First frame" onclick="anim3020e85d53d94ff0b8571ff5ed90c9ae.first_frame()">
+        <i class="fa fa-fast-backward"></i></button>
+      <button title="Previous frame" aria-label="Previous frame" onclick="anim3020e85d53d94ff0b8571ff5ed90c9ae.previous_frame()">
+          <i class="fa fa-step-backward"></i></button>
+      <button title="Play backwards" aria-label="Play backwards" onclick="anim3020e85d53d94ff0b8571ff5ed90c9ae.reverse_animation()">
+          <i class="fa fa-play fa-flip-horizontal"></i></button>
+      <button title="Pause" aria-label="Pause" onclick="anim3020e85d53d94ff0b8571ff5ed90c9ae.pause_animation()">
+          <i class="fa fa-pause"></i></button>
+      <button title="Play" aria-label="Play" onclick="anim3020e85d53d94ff0b8571ff5ed90c9ae.play_animation()">
+          <i class="fa fa-play"></i></button>
+      <button title="Next frame" aria-label="Next frame" onclick="anim3020e85d53d94ff0b8571ff5ed90c9ae.next_frame()">
+          <i class="fa fa-step-forward"></i></button>
+      <button title="Last frame" aria-label="Last frame" onclick="anim3020e85d53d94ff0b8571ff5ed90c9ae.last_frame()">
+          <i class="fa fa-fast-forward"></i></button>
+      <button title="Increase speed" aria-label="Increase speed" onclick="anim3020e85d53d94ff0b8571ff5ed90c9ae.faster()">
+          <i class="fa fa-plus"></i></button>
+    </div>
+    <form title="Repetition mode" aria-label="Repetition mode" action="#n" name="_anim_loop_select3020e85d53d94ff0b8571ff5ed90c9ae" class="anim-state">
+      <input type="radio" name="state" value="once" id="_anim_radio1_3020e85d53d94ff0b8571ff5ed90c9ae">
+      <label for="_anim_radio1_3020e85d53d94ff0b8571ff5ed90c9ae">Once</label>
+      <input type="radio" name="state" value="loop" id="_anim_radio2_3020e85d53d94ff0b8571ff5ed90c9ae" checked="">
+      <label for="_anim_radio2_3020e85d53d94ff0b8571ff5ed90c9ae">Loop</label>
+      <input type="radio" name="state" value="reflect" id="_anim_radio3_3020e85d53d94ff0b8571ff5ed90c9ae">
+      <label for="_anim_radio3_3020e85d53d94ff0b8571ff5ed90c9ae">Reflect</label>
+    </form>
+  </div>
+</div>
+
+
+<script language="javascript">
+  /* Instantiate the Animation class. */
+  /* The IDs given should match those used in the template above. */
+  (function() {
+    var img_id = "_anim_img3020e85d53d94ff0b8571ff5ed90c9ae";
+    var slider_id = "_anim_slider3020e85d53d94ff0b8571ff5ed90c9ae";
+    var loop_select_id = "_anim_loop_select3020e85d53d94ff0b8571ff5ed90c9ae";
+    var frames = new Array(5);
+    
+  frames[0] = "data:image/png;base64,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\
+"
+  frames[1] = "data:image/png;base64,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\
+vNy47rrrjP379xt1dXXG5MmTjbVr1ya58tS3fft2Iycnx3j00UeN5uZm46tf/aoxYcKEsBXVGL2O\
+jo7Qz6ck49/+7d+MN9980zhy5IhhGIaxefNmY8KECcYzzzxjHDhwwFi6dKlRWlpqnD59OsmVp76q\
+qirD4XAYu3fvDvs9e+rUqdA+d955pzF9+nRj165dxhtvvGFUVFQYFRUVSaw6fdx3331GfX290dLS\
+Yhw4cMC47777DJvNZvzP//yPYRic21RHAEyCRx55xJA05KO/P/3pT8aVV15p5OTkGGeffbaxefPm\
+JFWcfm677bYhz+/LL78c2ue9994zFi9ebIwbN86YNGmS8c1vftPo6elJXtFp5Oc//7kxffp0Izs7\
+25g7d66xZ8+eZJeUtl5++eUhf1Zvu+02wzD6WsGsW7fOmDJlipGTk2Ncc801xsGDB5NbdJoY7vfs\
+I488Etrn9OnTxl133WVMnDjRyMvLM2688cawP8YxvH/+5382ZsyYYWRnZxuTJ082rrnmmlD4MwzO\
+baqzGYZhJPCCIwAAAJKMVcAAAAAWQwAEAACwGAIgAACAxRAAAQAALIYACAAAYDEEQAAAAIshAAIA\
+AFgMARAAAMBiCIAAAAAWQwAEAACwGAIgAACAxRAAAQAALIYACAAAYDEEQAAAAIshAAIAAFgMARAA\
+AMBiCIAAAAAWQwAEAACwGAIgAACAxRAAAQAALIYACAAAYDEEQAAAAIshAAIAAFgMARAAAMBiCIAA\
+AAAWQwAEAACwGAIgAACAxRAAAQAALIYACAAAYDEEQAAAAIshAAIAAFjM/w9HLjveFOhdRwAAAABJ\
+RU5ErkJggg==\
+"
+  frames[2] = "data:image/png;base64,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\
+AAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAK\
+IwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMA\
+AQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEA\
+CiMAAQAKIwABAAojAAEACjNuA/Dpp5/OxRdfnOnTp6euri4PP/zwiO3VajU33XRTOjo6MmnSpMyf\
+Pz+/+MUvajMsAMAYGrcB2N/fnzPPPDN33HHHIbffdttt+e53v5u77747zz77bI477rgsWLAg+/bt\
+G+NJAQDG1rG1HmC0LFy4MAsXLjzktmq1mu985zu58cYb86UvfSlJ8r3vfS/Tpk3Lww8/nMsuu2ws\
+RwUAGFPj9gzgB9m6dWu6u7szf/784XWVSiXnnntuNmzYUMPJAABG37g9A/hBuru7kyTTpk0bsX7a\
+tGnD2w5lYGAgAwMDw4/7+vpGZ0AAgFFU5BnA39SqVatSqVSGl5kzZ9Z6JACAf7MiA7C9vT1JsnPn\
+zhHrd+7cObztUJYvX57e3t7hZfv27aM6JwDAaCgyAGfPnp329vasW7dueF1fX1+effbZzJs3731/\
+rrGxMc3NzSMWAICjzbi9BnDv3r15+eWXhx9v3bo1mzZtSktLS2bNmpXrr78+t956az7+8Y9n9uzZ\
+WbFiRaZPn55FixbVbmgAgDEwbgPw+eefz+c+97nhx8uWLUuSLFmyJPfee2++/vWvp7+/P1/72tey\
+e/fu/O7v/m4ef/zxTJw4sVYjAwCMibpqtVqt9RBHq76+vlQqlfT29no7GACOEl6/C70GEACgZAIQ\
+AKAwAhAAoDACEACgMAIQAKAwAhAAoDACEACgMAIQAKAwAhAAoDACEACgMAIQAKAwAhAAoDACEACg\
+MAIQAKAwAhAAoDACEACgMAIQAKAwAhAAoDACEACgMAIQAKAwAhAAoDACEACgMAIQAKAwx9Z6ADhS\
+HBiq5plXe7LhlZ4k1cw7aWrOO7k1x9TX1Xo0ADisBCAkeXxzV77x0I+z+839w+v+zydfyfGTJ+Rb\
+l5yei+Z01HA6ADi8vAVM8R7f3JWr/vqFEfF30O439+eqv34hj2/uqsFkADA6BCBFOzBUzc3//af/\
+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\
+AAAASUVORK5CYII=\
+"
+  frames[3] = "data:image/png;base64,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\
+s0NGXld2Z0p+lUQEHkkCEABonL0Dybfm57WvfSzd2V23qTu78+3WZbm/dYUIPMIEIADQOMNvJEM/\
+z6kTdmV167JaBHZnd1a3LsupE3ZlagZzYn7d4EGbiwAEABqn8t5k4eN5bbSzFoEfbflxLf5eG+3M\
+tSNL05+pjZ60qQhAAKCxKjNy7cjSWgR+p+2OuvjbIf6OOAEIADTcjkzNon031K1btO8G8TdGBCAA\
+0HCvLjk3d02s/0KGuybe85YbQ47k5wGWTAACAI018NPkvitrb/teM3xH3TWBByNQ/B05AhAAaJyB\
+nyX3XZn88tXkPafl1FueynPVD9ZdE7i6dVleXfKRRk/aVJr2u4ABgGNA2+TkxFMO/Hrh40llRl5d\
+MePA44FLD5wZPPGUA/txxAhAAKBxjq8kn/3HA58HWHlv/bbKjGThdw/E3/GVxszXpAQgANBYx1fe\
+PvDeHIUcEa4BBAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAo\
+jAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwA\
+BAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQA\
+KIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKEzTBuDy5ctz/vnn\
+Z8qUKens7My8efOyZcuWun0+9rGPpaWlpW75whe+0KCJAQDGR9MG4Lp169LX15eNGzfmySefzL59\
++3L55ZdnaGiobr+/+Iu/yI4dO2rLnXfe2aCJAQDGx3GNHmCsPPHEE3WP77vvvnR2dmbTpk255JJL\
+autPOOGEdHV1jfd4AAAN07RnAN9sYGAgSdLR0VG3/h/+4R9y8skn56yzzsqSJUvyq1/9qhHjAQCM\
+m6Y9A/jbRkdHc/PNN+fiiy/OWWedVVv/p3/6pzn11FMzffr0PP/88/mrv/qrbNmyJd/5zncO+TzD\
+w8MZHh6uPR4cHBzz2QEAjrQiArCvry8vvvhi/uVf/qVu/ec///nar88+++x0d3fnsssuy8svv5z3\
+v//9b3me5cuX58tf/vKYzwsAMJaa/i3gG2+8MY899lieeuqpzJgx4x33vfDCC5MkL7300iG3L1my\
+JAMDA7Vl27ZtR3xeAICx1rRnAKvVam666aasWbMmTz/9dGbNmvV//szmzZuTJN3d3Yfc3tbWlra2\
+tiM5JgDAuGvaAOzr68uqVavyyCOPZMqUKenv70+SVCqVTJo0KS+//HJWrVqVT3ziE5k6dWqef/75\
+LFq0KJdccknOOeecBk8PADB2WqrVarXRQ4yFlpaWQ65fuXJlFi5cmG3btuWzn/1sXnzxxQwNDaWn\
+pyef/OQnc9ttt6W9vf1d/TcGBwdTqVQyMDDwrn8GAGgsr99NfAbw/+ranp6erFu3bpymAQA4ejT9\
+TSAAANQTgAAAhRGAAACFEYAAAIURgAAAhRGAAACFEYAAAIURgAAAhRGAAACFEYAAAIURgAAAhRGA\
+AACFEYAAAIURgAAAhRGAAACFEYAAAIURgAAAhRGAAACFEYAAAIURgAAAhRGAAACFEYAAAIURgAAA\
+hRGAAACFEYAAAIURgAAAhRGAAACFEYAAAIURgAAAhRGAAACFEYAAAIURgAAAhRGAAACFEYAAAIUR\
+gAAAhRGAAACFEYAAAIURgAAAhRGAAACFEYAAAIURgAAAhRGAAACFEYAAAIURgAAAhRGAAACFEYAA\
+AIURgAAAhRGAAACFEYBHk70DycDPDr1t4GcHtgMAHCYBeLTYO5B8a35y3yeSgZ/Wbxv46YH135ov\
+AgGAw3ZcowfgN4bfSIZ+nvzy1bz2tY/n2pGl2ZGp6c7urG5dllMn7Prf/Y6vNHZWAOCY5gzg0aLy\
+3mTh43lttDOnTtiV1a3L8tGWH9fi77XRzmTh4wf2AwA4DALwKHLa8v/ItSNLaxH4nbY7avF37cjS\
+nLb8Pxo9IgDQBATgUeK0Wx9PkuzI1Czad0PdtkX7bsiOTK3bDwDg9yUAjzLd2Z27Jt5Tt+6uifek\
+O7sbNBEA0GyaNgCXL1+e888/P1OmTElnZ2fmzZuXLVu21O2zd+/e9PX1ZerUqZk8eXLmz5+fnTt3\
+Nmji1N3w8dpoZ64ZvqPumkARCAAcCU0bgOvWrUtfX182btyYJ598Mvv27cvll1+eoaGh2j6LFi3K\
+o48+moceeijr1q3L9u3bc8011zRk3q43xd+1I0vzXPWDddcErm5dli4RCAAcpqb9GJgnnnii7vF9\
+992Xzs7ObNq0KZdcckkGBgby93//91m1alUuvfTSJMnKlSvz4Q9/OBs3bsxFF100rvMOZVJ2pz0Z\
+Te0jYJID1wReO7I0q1uXZXfaM5RJ4zoXANB8mjYA32xg4MAHKHd0dCRJNm3alH379mX27Nm1fc44\
+44zMnDkzGzZsGPcAfGHFp3P2rcmJ+XX6fxN/B+3I1HxmZGmGMikvrPj0uM4FADSfpn0L+LeNjo7m\
+5ptvzsUXX5yzzjorSdLf35/W1tacdNJJdftOmzYt/f39h3ye4eHhDA4O1i1H0gsrPv2W+DuoP1PF\
+HwBwRBQRgH19fXnxxRezevXqw3qe5cuXp1Kp1Jaenp4jNOH/enXFlb/TegCA31XTvwV844035rHH\
+Hsv69eszY8aM2vqurq6MjIxkz549dWcBd+7cma6urkM+15IlS7J48eLa48HBwXGNQACAI6FpzwBW\
+q9XceOONWbNmTb7//e9n1qxZddvPO++8TJw4MWvXrq2t27JlS7Zu3Zre3t5DPmdbW1va29vrFgCA\
+Y03TngHs6+vLqlWr8sgjj2TKlCm16/oqlUomTZqUSqWS6667LosXL05HR0fa29tz0003pbe3d9xv\
+AAEAGE8t1Wq12ughxkJLS8sh169cuTILFy5McuCDoG+55ZY8+OCDGR4ezpw5c3LPPfe87VvAbzY4\
+OJhKpZKBgQFnAwHgGOH1u4kDcDz4CwQAxx6v3018DSAAAIcmAAEACiMAAQAKIwABAAojAAEACiMA\
+AQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEA\
+CiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAoj\
+AAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwAB\
+AAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAK\
+IwABAAojAAEACiMAAQAKIwABAAojAAEACtO0Abh+/fpcddVVmT59elpaWvLwww/XbV+4cGFaWlrq\
+liuuuKIxwwIAjKOmDcChoaGce+65ufvuu992nyuuuCI7duyoLQ8++OA4TggA0BjHNXqAsTJ37tzM\
+nTv3Hfdpa2tLV1fXOE0EAHB0aNozgO/G008/nc7OznzoQx/K9ddfn927d7/j/sPDwxkcHKxbAACO\
+NcUG4BVXXJEHHngga9euzd/8zd9k3bp1mTt3bvbv3/+2P7N8+fJUKpXa0tPTM44TAwAcGS3VarXa\
+6CHGWktLS9asWZN58+a97T7/9V//lfe///3553/+51x22WWH3Gd4eDjDw8O1x4ODg+np6cnAwEDa\
+29uP9NgAwBgYHBxMpVIp+vW72DOAb/a+970vJ598cl566aW33aetrS3t7e11CwDAsUYA/sZPf/rT\
+7N69O93d3Y0eBQBgTDXtXcBvvPFG3dm8V155JZs3b05HR0c6Ojry5S9/OfPnz09XV1defvnlfPGL\
+X8zpp5+eOXPmNHBqAICx17QB+Oyzz+bjH/947fHixYuTJAsWLMi9996b559/Pvfff3/27NmT6dOn\
+5/LLL8+yZcvS1tbWqJEBAMZFETeBjBUXkQLAscfrt2sAAQCKIwABAAojAAEACiMAAQAKIwABAAoj\
+AAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwAB\
+AAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAK\
+IwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMA\
+AQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEA\
+CiMAAQAKIwABAAojAAEACiMAAQAK07QBuH79+lx11VWZPn16Wlpa8vDDD9dtr1aruf3229Pd3Z1J\
+kyZl9uzZ+clPftKYYQEAxlHTBuDQ0FDOPffc3H333Yfcfuedd+Yb3/hGvvnNb+aZZ57JiSeemDlz\
+5mTv3r3jPCkAwPg6rtEDjJW5c+dm7ty5h9xWrVbz9a9/PbfddluuvvrqJMkDDzyQadOm5eGHH861\
+1147nqMCAIyrpj0D+E5eeeWV9Pf3Z/bs2bV1lUolF154YTZs2NDAyQAAxl7TngF8J/39/UmSadOm\
+1a2fNm1abduhDA8PZ3h4uPZ4cHBwbAYEABhDRZ4B/H0tX748lUqltvT09DR6JACA31mRAdjV1ZUk\
+2blzZ936nTt31rYdypIlSzIwMFBbtm3bNqZzAgCMhSIDcNasWenq6sratWtr6wYHB/PMM8+kt7f3\
+bX+ura0t7e3tdQsAwLGmaa8BfOONN/LSSy/VHr/yyivZvHlzOjo6MnPmzNx88835yle+kg984AOZ\
+NWtWli5dmunTp2fevHmNGxoAYBw0bQA+++yz+fjHP157vHjx4iTJggULct999+WLX/xihoaG8vnP\
+fz579uzJH//xH+eJJ57I8ccf36iRAQDGRUu1Wq02eohj1eDgYCqVSgYGBrwdDADHCK/fhV4DCABQ\
+MgEIAFAYAQgAUBgBCABQGAEIAFAYAQgAUBgBCABQGAEIAFAYAQgAUBgBCABQGAEIAFAYAQgAUBgB\
+CABQGAEIAFAYAQgAUBgBCABQGAEIAFAYAQgAUBgBCABQGAEIAFAYAQgAUBgBCABQGAEIAFAYAQgA\
+UBgBCABQGAEIAFAYAQgAUBgBCABQGAEIB+0dSAZ+duhtAz87sB0AmsBxjR4Ajgp7B5JvzU+Gfp7e\
+HbdkR6bWNnVndzZ0fy058ZTks/+YHF9p4KAAcPicAYQkGX4jGfp58stXs7p1WbqzO8mB+Fvduiz5\
+5asHtg+/0dg5AeAIEICQJJX3pnfHLXlttDOnTtiV1a3L8tGWH2d167KcOmFXXhvtTO+OW5LKexs9\
+KQAcNgEISU679fHsyNRcO7K0FoHfabujFn/XjizNjkzNabc+3uhRAeCwCUD4LTsyNYv23VC3btG+\
+G+quCQSAY50AhN/Snd25a+I9devumnhP7ZpAAGgGAhB+4+ANHwff9r1m+I66awJFIADNQgBCkq43\
+xd+1I0vzXPWDddcErm5dli4RCEATEICQZOMdV2d32utu+EhSd2PI7rRn4x1XN3hSADh8LdVqtdro\
+IY5Vg4ODqVQqGRgYSHt7e6PH4XDtHchFdzyS/kPc8NGV3Qfiz4dAAxzzvH47Awj/6/hKNq743CE3\
+bVzxOfEHQNPwVXDwJq+uuLLRIwDAmHIGEACgMAIQAKAwAhAAoDACEACgMAIQAKAwAhAAoDACEACg\
+MAIQAKAwAhAAoDC+CeQwHPwa5cHBwQZPAgC8Wwdftw++jpdIAB6G119/PUnS09PT4EkAgN/V66+/\
+nkqlzO95b6mWnL+HaXR0NNu3b8+UKVPS0tLS6HGKMjg4mJ6enmzbti3t7e2NHoffcFyOXo7N0clx\
+aYxqtZrXX38906dPz4QJZV4N5wzgYZgwYUJmzJjR6DGK1t7e7n+aRyHH5ejl2BydHJfxV+qZv4PK\
+zF4AgIIJQACAwghAjkltbW350pe+lLa2tkaPwm9xXI5ejs3RyXGhUdwEAgBQGGcAAQAKIwABAAoj\
+AAEACiMAAQAKIwA5pvz1X/91/uiP/ignnHBCTjrppEPus3Xr1lx55ZU54YQT0tnZmb/8y7/M//zP\
+/4zvoIW6++67c9ppp+X444/PhRdemH/7t39r9EhFWb9+fa666qpMnz49LS0tefjhh+u2V6vV3H77\
+7enu7s6kSZMye/bs/OQnP2nMsAVZvnx5zj///EyZMiWdnZ2ZN29etmzZUrfP3r1709fXl6lTp2by\
+5MmZP39+du7c2aCJKYEA5JgyMjKST3/607n++usPuX3//v258sorMzIykn/913/N/fffn/vuuy+3\
+3377OE9anm9/+9tZvHhxvvSlL+W5557Lueeemzlz5mTXrl2NHq0YQ0NDOffcc3P33Xcfcvudd96Z\
+b3zjG/nmN7+ZZ555JieeeGLmzJmTvXv3jvOkZVm3bl36+vqycePGPPnkk9m3b18uv/zyDA0N1fZZ\
+tGhRHn300Tz00ENZt25dtm/fnmuuuaaBU9P0qnAMWrlyZbVSqbxl/Xe/+93qhAkTqv39/bV19957\
+b7W9vb06PDw8jhOW54ILLqj29fXVHu/fv786ffr06vLlyxs4VbmSVNesWVN7PDo6Wu3q6qp+9atf\
+ra3bs2dPta2trfrggw82YMJy7dq1q5qkum7dumq1euA4TJw4sfrQQw/V9vnP//zPapLqhg0bGjUm\
+Tc4ZQJrKhg0bcvbZZ2fatGm1dXPmzMng4GB+8IMfNHCy5jYyMpJNmzZl9uzZtXUTJkzI7Nmzs2HD\
+hgZOxkGvvPJK+vv7645RpVLJhRde6BiNs4GBgSRJR0dHkmTTpk3Zt29f3bE544wzMnPmTMeGMSMA\
+aSr9/f118Zek9ri/v78RIxXhv//7v7N///5D/tn7cz86HDwOjlFjjY6O5uabb87FF1+cs846K8mB\
+Y9Pa2vqW65odG8aSAKThbr311rS0tLzj8qMf/ajRYwIctr6+vrz44otZvXp1o0ehcMc1egC45ZZb\
+snDhwnfc533ve9+7eq6urq633Hl68E66rq6u32s+/m8nn3xy/uAP/uAtdy3u3LnTn/tR4uBx2Llz\
+Z7q7u2vrd+7cmY985CMNmqosN954Yx577LGsX78+M2bMqK3v6urKyMhI9uzZU3cW0L8fxpIzgDTc\
+KaeckjPOOOMdl9bW1nf1XL29vXnhhRfq7jx98skn097enjPPPHOsfgvFa21tzXnnnZe1a9fW1o2O\
+jmbt2rXp7e1t4GQcNGvWrHR1ddUdo8HBwTzzzDOO0RirVqu58cYbs2bNmnz/+9/PrFmz6rafd955\
+mThxYt2x2bJlS7Zu3erYMGacAeSYsnXr1vziF7/I1q1bs3///mzevDlJcvrpp2fy5Mm5/PLLc+aZ\
+Z+bP/uzPcuedd6a/vz+33XZb+vr60tbW1tjhm9zixYuzYMGC/OEf/mEuuOCCfP3rX8/Q0FD+/M//\
+vNGjFeONN97ISy+9VHv8yiuvZPPmzeno6MjMmTNz88035ytf+Uo+8IEPZNasWVm6dGmmT5+eefPm\
+NW7oAvT19WXVqlV55JFHMmXKlNp1fZVKJZMmTUqlUsl1112XxYsXp6OjI+3t7bnpppvS29ubiy66\
+qMHT07QafRsy/C4WLFhQTfKW5amnnqrt8+qrr1bnzp1bnTRpUvXkk0+u3nLLLdV9+/Y1buiC/N3f\
+/V115syZ1dbW1uoFF1xQ3bhxY6NHKspTTz11yH8fCxYsqFarBz4KZunSpdVp06ZV29raqpdddll1\
+y5YtjR26AIc6JkmqK1eurO3z61//unrDDTdU3/Oe91RPOOGE6ic/+cnqjh07Gjc0Ta+lWq1Wxz87\
+AQBoFNcAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgAC\
+ABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAU\
+RgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAU5v8Doqm3oXK9kMEA\
+AAAASUVORK5CYII=\
+"
+  frames[4] = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAoAAAAHgCAYAAAA10dzkAAAAOXRFWHRTb2Z0d2FyZQBNYXRwbG90\
+bGliIHZlcnNpb24zLjcuMSwgaHR0cHM6Ly9tYXRwbG90bGliLm9yZy/bCgiHAAAACXBIWXMAAA9h\
+AAAPYQGoP6dpAAAemElEQVR4nO3df6yW9X3/8ddh5RxRuG97UDhQDkprW2usNnX+OHMxbWUiNUYq\
+bWqWrrCYLdWjiWDWSSLWhi44m8Wui9p/FrHpkMasaNTWxqFCloGbNEztVlo7ESsc6Fg5t56Wcxjn\
+/v5Buddb0a8tnHPD/Xk8kivpfV0Xd95yae9nPue67tNRr9frAQCgGBNaPQAAAONLAAIAFEYAAgAU\
+RgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYA\
+AgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIA\
+FEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRG\
+AAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgAC\
+ABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFOZdrR7geDY6OpodO3ZkypQp6ejo\
+aPU4AMA7UK/X89prr2XmzJmZMKHMtTABeAR27NiR3t7eVo8BAPwOXnnllcyaNavVY7SEADwCU6ZM\
+SXLwX6BKpdLiaQCAd6JWq6W3t7fxOV4iAXgEDv3Yt1KpCEAAOM6UfPtWmT/4BgAomAAEACiMAAQA\
+KIwABAAojAAEACiMAAQAKIwABAAojAAEACiML4KmaKff8tib9m2744oWTAIA48cKIOXZN5gMvnrY\
++OvJnnz4lgdbMBQAjB8BSFn2DSbfWpiX/+ZjmZE9TYdmZE++3bki93feIQIBaGsCkLIMv56Xt7+c\
+0ybszprOFY0InJE9WdO5IqdN2J2pqeWk/OqwK4QA0A4EIGWpvifXjCzPy6PTGhH40Y4fN+Lv5dFp\
+uWZkeQYytdWTAsCYEYAUZ2emNkXgd7pub4q/neIPgDYnACnSzkzNkv3XN+1bsv968QdAEQQgRZqR\
+Pblr4j1N++6aeM+bHgwBgHYkACnOtmXnNt3zd/Xw7U33BB6KQN8HCEC7EoCUZfDVZNUVTff8/aD+\
+gTc9GLJt2UdaPSkAjBkBSFm6JicnnZq8+/ScdvNTjXv+mh4MmX3awfMAoE111Ov1equHOF7VarVU\
+q9UMDg6mUqm0ehzeqX2DyfDrSfU9bz42+OrB+DuhOv5zATAufH77XcCU6ITqWwfe4aIQANqMHwED\
+ABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAU\
+RgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAUpm0D8N57780555yTSqWSSqWSvr6+fO9732sc\
+37dvX/r7+zN16tRMnjw5CxcuzK5du1o4MQDA+GjbAJw1a1buuOOObN68Oc8++2w+8YlP5KqrrsoP\
+f/jDJMmSJUvyyCOP5MEHH8z69euzY8eOXH311S2eGgBg7HXU6/V6q4cYL93d3fnqV7+aT3/60zn1\
+1FOzevXqfPrTn06S/OhHP8qHPvShbNy4MRdddNE7er9arZZqtZrBwcFUKpWxHB0AOEp8frfxCuBv\
+OnDgQNasWZOhoaH09fVl8+bN2b9/f+bOnds458wzz8zs2bOzcePGt3yf4eHh1Gq1pg0A4HjT1gH4\
+/PPPZ/Lkyenq6soXvvCFrF27NmeddVYGBgbS2dmZk08+uen86dOnZ2Bg4C3fb+XKlalWq42tt7d3\
+jP8JAACOvrYOwA9+8IPZsmVLnnnmmVx33XVZtGhR/uM//uN3fr9ly5ZlcHCwsb3yyitHcVoAgPHx\
+rlYPMJY6OztzxhlnJEnOO++8/Nu//Vv+9m//Np/97GczMjKSvXv3Nq0C7tq1Kz09PW/5fl1dXenq\
+6hrrsQEAxlRbrwC+0ejoaIaHh3Peeedl4sSJWbduXePY1q1bs3379vT19bVwQgCAsde2K4DLli3L\
+/PnzM3v27Lz22mtZvXp1nn766Xz/+99PtVrNtddem6VLl6a7uzuVSiU33nhj+vr63vETwAAAx6u2\
+DcDdu3fn85//fHbu3JlqtZpzzjkn3//+9/NHf/RHSZK77rorEyZMyMKFCzM8PJx58+blnnvuafHU\
+AABjr6jvATzafI8QABx9p9/y2Jv2bbvjiqP2/j6/C7sHEAA4th0u/t5uP78bAQgAtNa+wWTw1cNG\
+Xk/2ZEp+mUQEHk0CEABonX2DybcW5uW/+VhmZE/ToRnZk293rsj9nXeIwKNMAAIArTP8ejL085w2\
+YXfWdK5oROCM7MmazhU5bcLuTE0tJ+VXLR60vQhAAKB1qu9JFj+Wl0enNSLwox0/bsTfy6PTcs3I\
+8gxkaqsnbSsCEABoreqsXDOyvBGB3+m6vSn+doq/o04AAgAttzNTs2T/9U37luy/XvyNEQEIALTc\
+tmXn5q6Jzb+Q4a6J97zpwZCj+X2AJROAAEBrDf4sWXVF48e+Vw/f3nRP4KEIFH9HjwAEAFpn8NVk\
+1RXJL7Yl7z49p938VH5Q/0DTPYFrOldk27KPtHrSttK2vwsYADgOdE1OTjr14P9e/FhSnZVtd8w6\
++HrwEwdXBk869eB5HDUCEABonROqyef+8eD3AVbf03ysOitZ/N2D8XdCtTXztSkBCAC01gnVtw68\
+N0YhR4V7AAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMA\
+AQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEA\
+CiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAoj\
+AAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAArTtgG4cuXKnH/++Zky\
+ZUqmTZuWBQsWZOvWrU3nfOxjH0tHR0fT9oUvfKFFEwMAjI+2DcD169env78/mzZtyhNPPJH9+/fn\
+sssuy9DQUNN5f/Znf5adO3c2tjvvvLNFEwMAjI93tXqAsfL44483vV61alWmTZuWzZs355JLLmns\
+P/HEE9PT0zPe4wEAtEzbrgC+0eDgYJKku7u7af8//MM/5JRTTsnZZ5+dZcuW5Ze//OVbvsfw8HBq\
+tVrTBgBwvGnbFcDfNDo6mptuuikXX3xxzj777Mb+P/7jP85pp52WmTNn5rnnnstf/uVfZuvWrfnO\
+d75z2PdZuXJlvvzlL4/X2AAAY6KjXq/XWz3EWLvuuuvyve99L//8z/+cWbNmveV5Tz75ZC699NK8\
++OKLed/73vem48PDwxkeHm68rtVq6e3tzeDgYCqVypjMDgAcXbVaLdVqtejP77ZfAbzhhhvy6KOP\
+ZsOGDW8bf0ly4YUXJslbBmBXV1e6urrGZE4AgPHStgFYr9dz4403Zu3atXn66aczZ86c/++f2bJl\
+S5JkxowZYzwdAEDrtG0A9vf3Z/Xq1Xn44YczZcqUDAwMJEmq1WomTZqUn/70p1m9enU++clPZurU\
+qXnuueeyZMmSXHLJJTnnnHNaPD0AwNhp23sAOzo6Drv/vvvuy+LFi/PKK6/kc5/7XF544YUMDQ2l\
+t7c3n/rUp3Lrrbe+4/sB3EMAAMcfn99tvAL4/+va3t7erF+/fpymAQA4dhTzPYAAABwkAAEACiMA\
+AQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEA\
+CiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAoj\
+AAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwAB\
+AAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAKIwABAAojAAEACiMAAQAK\
+IwCPJfsGk8FXD39s8NWDxwEAjpAAPFbsG0y+tTBZ9clk8GfNxwZ/dnD/txaKQADgiL2r1QPwa8Ov\
+J0M/T36xLS//zcdzzcjy7MzUzMierOlckdMm7P6/806otnZWAOC4ZgXwWFF9T7L4sbw8Oi2nTdid\
+NZ0r8tGOHzfi7+XRacnixw6eBwBwBATgMeT0lf+ea0aWNyLwO123N+LvmpHlOX3lv7d6RACgDQjA\
+Y8TptzyWJNmZqVmy//qmY0v2X5+dmdp0HgDA70oAHmNmZE/umnhP0767Jt6TGdnTookAgHbTtgG4\
+cuXKnH/++ZkyZUqmTZuWBQsWZOvWrU3n7Nu3L/39/Zk6dWomT56chQsXZteuXS2aOE0PfLw8Oi1X\
+D9/edE+gCAQAjoa2DcD169env78/mzZtyhNPPJH9+/fnsssuy9DQUOOcJUuW5JFHHsmDDz6Y9evX\
+Z8eOHbn66qtbMm/PG+LvmpHl+UH9A033BK7pXJEeEQgAHKG2/RqYxx9/vOn1qlWrMm3atGzevDmX\
+XHJJBgcH8/d///dZvXp1PvGJTyRJ7rvvvnzoQx/Kpk2bctFFF43rvEOZlD2pJKNpfAVMcvCewGtG\
+lmdN54rsSSVDmTSucwEA7adtA/CNBgcPfoFyd3d3kmTz5s3Zv39/5s6d2zjnzDPPzOzZs7Nx48Zx\
+D8Dn7/hMPnxLclJ+lYFfx98hOzM1nx1ZnqFMyvN3fGZc5wIA2k/b/gj4N42Ojuamm27KxRdfnLPP\
+PjtJMjAwkM7Ozpx88slN506fPj0DAwOHfZ/h4eHUarWm7Wh6/o7PvCn+DhnIVPEHABwVRQRgf39/\
+XnjhhaxZs+aI3mflypWpVquNrbe39yhN+H+23XHFb7UfAOC31fY/Ar7hhhvy6KOPZsOGDZk1a1Zj\
+f09PT0ZGRrJ3796mVcBdu3alp6fnsO+1bNmyLF26tPG6VquNawQCABwNbbsCWK/Xc8MNN2Tt2rV5\
+8sknM2fOnKbj5513XiZOnJh169Y19m3dujXbt29PX1/fYd+zq6srlUqlaQMAON607Qpgf39/Vq9e\
+nYcffjhTpkxp3NdXrVYzadKkVKvVXHvttVm6dGm6u7tTqVRy4403pq+vb9wfAAEAGE8d9Xq93uoh\
+xkJHR8dh9993331ZvHhxkoNfBH3zzTfngQceyPDwcObNm5d77rnnLX8E/Ea1Wi3VajWDg4NWAwHg\
+OOHzu40DcDz4FwgAjj8+v9v4HkAAAA5PAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIA\
+FEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRG\
+AAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgAC\
+ABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAU\
+RgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYAAgAURgACABRGAAIAFEYA\
+AgAURgACABRGAAIAFKZtA3DDhg258sorM3PmzHR0dOShhx5qOr548eJ0dHQ0bZdffnlrhgUAGEdt\
+G4BDQ0M599xzc/fdd7/lOZdffnl27tzZ2B544IFxnBAAoDXe1eoBxsr8+fMzf/78tz2nq6srPT09\
+4zQRAMCxoW1XAN+Jp59+OtOmTcsHP/jBXHfdddmzZ8/bnj88PJxarda0AQAcb4oNwMsvvzzf/OY3\
+s27duvz1X/911q9fn/nz5+fAgQNv+WdWrlyZarXa2Hp7e8dxYgCAo6OjXq/XWz3EWOvo6MjatWuz\
+YMGCtzznv/7rv/K+970v//RP/5RLL730sOcMDw9neHi48bpWq6W3tzeDg4OpVCpHe2wAYAzUarVU\
+q9WiP7+LXQF8o/e+97055ZRT8uKLL77lOV1dXalUKk0bAMDxRgD+2s9+9rPs2bMnM2bMaPUoAABj\
+qm2fAn799debVvNeeumlbNmyJd3d3enu7s6Xv/zlLFy4MD09PfnpT3+aL37xiznjjDMyb968Fk4N\
+ADD22jYAn3322Xz84x9vvF66dGmSZNGiRbn33nvz3HPP5f7778/evXszc+bMXHbZZVmxYkW6urpa\
+NTIAwLgo4iGQseImUgA4/vj8dg8gAEBxBCAAQGEEIABAYQQgAEBhBCAAQGEEIABAYQQgAEBhBCAA\
+QGEEIABAYQQgAEBhBCAAQGEEIABAYQQgAEBhBCAAQGEEIABAYQQgAEBhBCAAQGEEIABAYQQgAEBh\
+BCAAQGEEIABAYQQgAEBhBCAAQGEEIABAYQQgAEBhBCAAQGEEIABAYQQgAEBhBCAAQGEEIABAYQQg\
+AEBhBCAAQGEEIABAYQQgAEBhBCAAQGEEIABAYQQgAEBhBCAAQGEEIABAYQQgAEBhBCAAQGEEIABA\
+YQQgAEBhBCAAQGEEIABAYQQgAEBhBCAAQGEEIABAYQQgAEBhBCAAQGEEIABAYQQgAEBhBCAAQGEE\
+IABAYQQgAEBh2jYAN2zYkCuvvDIzZ85MR0dHHnrooabj9Xo9t912W2bMmJFJkyZl7ty5+clPftKa\
+YQEAxlHbBuDQ0FDOPffc3H333Yc9fuedd+brX/96vvGNb+SZZ57JSSedlHnz5mXfvn3jPCkAwPh6\
+V6sHGCvz58/P/PnzD3usXq/na1/7Wm699dZcddVVSZJvfvObmT59eh566KFcc8014zkqAMC4atsV\
+wLfz0ksvZWBgIHPnzm3sq1arufDCC7Nx48YWTgYAMPbadgXw7QwMDCRJpk+f3rR/+vTpjWOHMzw8\
+nOHh4cbrWq02NgMCAIyhIlcAf1crV65MtVptbL29va0eCQDgt1ZkAPb09CRJdu3a1bR/165djWOH\
+s2zZsgwODja2V155ZUznBAAYC0UG4Jw5c9LT05N169Y19tVqtTzzzDPp6+t7yz/X1dWVSqXStAEA\
+HG/a9h7A119/PS+++GLj9UsvvZQtW7aku7s7s2fPzk033ZSvfOUref/73585c+Zk+fLlmTlzZhYs\
+WNC6oQEAxkHbBuCzzz6bj3/8443XS5cuTZIsWrQoq1atyhe/+MUMDQ3lz//8z7N379784R/+YR5/\
+/PGccMIJrRoZAGBcdNTr9Xqrhzhe1Wq1VKvVDA4O+nEwABwnfH4Xeg8gAEDJBCAAQGEEIABAYQQg\
+AEBhBCAAQGEEIABAYQQgAEBhBCAAQGEEIABAYQQgAEBhBCAAQGEEIABAYQQgAEBhBCAAQGEEIABA\
+YQQgAEBhBCAAQGEEIABAYQQgAEBhBCAAQGEEIABAYQQgAEBhBCAAQGEEIABAYQQgAEBhBCAAQGEE\
+IABAYQQgAEBhBCAcsm8wGXz18McGXz14HADawLtaPQAcE/YNJt9amAz9PH07b87OTG0cmpE92Tjj\
+b5KTTk0+94/JCdUWDgoAR84KICTJ8OvJ0M+TX2zLms4VmZE9SQ7G35rOFckvth08Pvx6a+cEgKNA\
+AEKSVN+Tvp035+XRaTltwu6s6VyRj3b8OGs6V+S0Cbvz8ui09O28Oam+p9WTAsARE4CQ5PRbHsvO\
+TM01I8sbEfidrtsb8XfNyPLszNScfstjrR4VAI6YAITfsDNTs2T/9U37luy/vumeQAA43glA+A0z\
+sid3Tbynad9dE+9p3BMIAO1AAMKvHXrg49CPfa8evr3pnkARCEC7EICQpOcN8XfNyPL8oP6BpnsC\
+13SuSI8IBKANCEBIsun2q7InlaYHPpI0PRiyJ5Vsuv2qFk8KAEeuo16v11s9xPGqVqulWq1mcHAw\
+lUql1eNwpPYN5qLbH87AYR746Mmeg/HnS6ABjns+v60Awv85oZpNd3z+sIc23fF58QdA2/Cr4OAN\
+tt1xRatHAIAxZQUQAKAwAhAAoDACEACgMAIQAKAwAhAAoDACEACgMAIQAKAwAhAAoDACEACgMH4T\
+yBE49GuUa7VaiycBAN6pQ5/bhz7HSyQAj8Brr72WJOnt7W3xJADAb+u1115LtVrm73nvqJecv0do\
+dHQ0O3bsyJQpU9LR0dHqcYpSq9XS29ubV155JZVKpdXj8Guuy7HLtTk2uS6tUa/X89prr2XmzJmZ\
+MKHMu+GsAB6BCRMmZNasWa0eo2iVSsX/aR6DXJdjl2tzbHJdxl+pK3+HlJm9AAAFE4AAAIURgByX\
+urq68qUvfSldXV2tHoXf4Locu1ybY5PrQqt4CAQAoDBWAAEACiMAAQAKIwABAAojAAEACiMAOe78\
+1V/9Vf7gD/4gJ554Yk4++eTDnrN9+/ZcccUVOfHEEzNt2rT8xV/8Rf73f/93fAct0N13353TTz89\
+J5xwQi688ML867/+a6tHKsqGDRty5ZVXZubMmeno6MhDDz3UdLxer+e2227LjBkzMmnSpMydOzc/\
++clPWjNsQVauXJnzzz8/U6ZMybRp07JgwYJs3bq16Zx9+/alv78/U6dOzeTJk7Nw4cLs2rWrRRNT\
+AgHIcWdkZCSf+cxnct111x32+IEDB3LFFVdkZGQk//Iv/5L7778/q1atym233TbOk5bl29/+dpYu\
+XZovfelL+cEPfpBzzz038+bNy+7du1s9WjGGhoZy7rnn5u677z7s8TvvvDNf//rX841vfCPPPPNM\
+TjrppMybNy/79u0b50nLsn79+vT392fTpk154oknsn///lx22WUZGhpqnLNkyZI88sgjefDBB7N+\
+/frs2LEjV199dQunpu3V4Th133331avV6pv2f/e7361PmDChPjAw0Nh377331iuVSn14eHgcJyzL\
+BRdcUO/v72+8PnDgQH3mzJn1lStXtnCqciWpr127tvF6dHS03tPTU//qV7/a2Ld37956V1dX/YEH\
+HmjBhOXavXt3PUl9/fr19Xr94HWYOHFi/cEHH2yc85//+Z/1JPWNGze2akzanBVA2s7GjRvz4Q9/\
+ONOnT2/smzdvXmq1Wn74wx+2cLL2NTIyks2bN2fu3LmNfRMmTMjcuXOzcePGFk7GIS+99FIGBgaa\
+rlG1Ws2FF17oGo2zwcHBJEl3d3eSZPPmzdm/f3/TtTnzzDMze/Zs14YxIwBpOwMDA03xl6TxemBg\
+oBUjtb3//u//zoEDBw779+7v/Nhw6Dq4Rq01Ojqam266KRdffHHOPvvsJAevTWdn55vuaXZtGEsC\
+kGPCLbfcko6OjrfdfvSjH7V6TIAj0t/fnxdeeCFr1qxp9SgU7l2tHgCS5Oabb87ixYvf9pz3vve9\
+7+i9enp63vT06aGn6Xp6en6n+Xh7p5xySn7v937vTU8t7tq1y9/5MeLQddi1a1dmzJjR2L9r1658\
+5CMfadFUZbnhhhvy6KOPZsOGDZk1a1Zjf09PT0ZGRrJ3796mVUD//TCWrAByTDj11FNz5plnvu3W\
+2dn5jt6rr68vzz//fNPTp0888UQqlUrOOuussfpHKFpnZ2fOO++8rFu3rrFvdHQ069atS19fXwsn\
+45A5c+akp6en6RrVarU888wzrtEYq9frueGGG7J27do8+eSTmTNnTtPx8847LxMnTmy6Nlu3bs32\
+7dtdG8aMFUCOO9u3b8///M//ZPv27Tlw4EC2bNmSJDnjjDMyefLkXHbZZTnrrLPyJ3/yJ7nzzjsz\
+MDCQW2+9Nf39/enq6mrt8G1s6dKlWbRoUX7/938/F1xwQb72ta9laGgof/qnf9rq0Yrx+uuv58UX\
+X2y8fumll7Jly5Z0d3dn9uzZuemmm/KVr3wl73//+zNnzpwsX748M2fOzIIFC1o3dAH6+/uzevXq\
+PPzww5kyZUrjvr5qtZpJkyalWq3m2muvzdKlS9Pd3Z1KpZIbb7wxfX19ueiii1o8PW2r1Y8hw29r\
+0aJF9SRv2p566qnGOdu2bavPnz+/PmnSpPopp5xSv/nmm+v79+9v3dCF+Lu/+7v67Nmz652dnfUL\
+LrigvmnTplaPVJSnnnrqsP9tLFq0qF6vH/wqmOXLl9enT59e7+rqql966aX1rVu3tnboAhzumiSp\
+33fffY1zfvWrX9Wvv/76+rvf/e76iSeeWP/Upz5V37lzZ+uGpu111Ov1+vhnJwAAreIeQACAwghA\
+AIDCCEAAgMIIQACAwghAAIDCCEAAgMIIQACAwghAAIDCCEAAgMIIQACAwghAAIDCCEAAgMIIQACA\
+wghAAIDCCEAAgMIIQACAwghAAIDCCEAAgMIIQACAwghAAIDCCEAAgMIIQACAwghAAIDCCEAAgMII\
+QACAwghAAIDCCEAAgMIIQACAwghAAIDCCEAAgMIIQACAwvw/qC/U2IWPWdsAAAAASUVORK5CYII=\
+"
+
+
+    /* set a timeout to make sure all the above elements are created before
+       the object is initialized. */
+    setTimeout(function() {
+        anim3020e85d53d94ff0b8571ff5ed90c9ae = new Animation(frames, img_id, slider_id, 500.0,
+                                 loop_select_id);
+    }, 0);
+  })()
+</script>
+</div>
+</div>
+</section>
+<section id="how-do-we-gpu-accelerate-this" class="level1">
+<h1>How do we GPU accelerate this?</h1>
+<p>The issue is this loop:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, x <span class="kw">in</span> <span class="bu">enumerate</span>(X):</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This is called the “kernel launching overhead”. Let’s try to batch this operation</p>
+<div class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>bs <span class="op">=</span> <span class="dv">5</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> data.clone()</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>miniX <span class="op">=</span> X[:bs]</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>miniX</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="17">
+<pre><code>tensor([[30.7565, 27.9813],
+        [26.2158, 26.9614],
+        [26.2037, 26.3486],
+        [25.6908, 30.2133],
+        [23.2542, 28.5149]])</code></pre>
+</div>
+</div>
+<p>Now, we need to compute the matrix of distances for each row, which is a <span class="math inline">\(m \times n\)</span> matrix, where <span class="math inline">\(m\)</span> is the <code>bs</code> (batch size) and <span class="math inline">\(n\)</span> is the dataset size.</p>
+<p>Now, we can’t just subtract these off because of the mismatched first dimension.</p>
+<div class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    X <span class="op">-</span> miniX</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">RuntimeError</span> <span class="im">as</span> e:</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(e)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>The size of tensor a (1024) must match the size of tensor b (5) at non-singleton dimension 0</code></pre>
+</div>
+</div>
+<p>Let’s try adding some unit dimensions</p>
+<div class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>X[<span class="va">None</span>, :].shape, miniX[:, <span class="va">None</span>].shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="19">
+<pre><code>(torch.Size([1, 1024, 2]), torch.Size([5, 1, 2]))</code></pre>
+</div>
+</div>
+<p>These dimensions are broadcast compatible because they will result in a copy of the non-batch dimension across the new-unit dimension. Let’s see what happens when we do the subtraction now.</p>
+<div class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>delta <span class="op">=</span> X[<span class="va">None</span>, :] <span class="op">-</span> miniX[:, <span class="va">None</span>]</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>delta.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="20">
+<pre><code>torch.Size([5, 1024, 2])</code></pre>
+</div>
+</div>
+<p>Now, we can index into the <span class="math inline">\(row_i\)</span> and <span class="math inline">\(row_j\)</span> difference as desired</p>
+<div class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>delta[<span class="dv">0</span>, <span class="dv">0</span>, :], delta[<span class="dv">0</span>, <span class="dv">1</span>, :]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="21">
+<pre><code>(tensor([0., 0.]), tensor([-4.5407, -1.0199]))</code></pre>
+</div>
+</div>
+<p>Now, we just need to collapse this into a <span class="math inline">\(bs \times n\)</span> matrix of distances</p>
+<div class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>dist <span class="op">=</span> (delta<span class="op">**</span><span class="dv">2</span>).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">2</span>).sqrt()</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>dist</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="22">
+<pre><code>tensor([[ 0.0000,  4.6538,  4.8366,  ..., 48.0356, 51.1620, 45.6434],
+        [ 4.6538,  0.0000,  0.6129,  ..., 43.3835, 46.5297, 40.9945],
+        [ 4.8366,  0.6129,  0.0000,  ..., 43.2585, 46.4482, 40.8819],
+        [ 5.5356,  3.2940,  3.8986,  ..., 43.6154, 46.5149, 41.1672],
+        [ 7.5212,  3.3443,  3.6595,  ..., 40.8279, 43.8168, 38.3975]])</code></pre>
+</div>
+</div>
+<p>Alternately, as an <code>einsum</code>:</p>
+<div class="cell" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>torch.einsum(<span class="st">"ijk,ijk-&gt;ij"</span>, delta, delta).sqrt()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="23">
+<pre><code>tensor([[ 0.0000,  4.6538,  4.8366,  ..., 48.0356, 51.1620, 45.6434],
+        [ 4.6538,  0.0000,  0.6129,  ..., 43.3835, 46.5297, 40.9945],
+        [ 4.8366,  0.6129,  0.0000,  ..., 43.2585, 46.4482, 40.8819],
+        [ 5.5356,  3.2940,  3.8986,  ..., 43.6154, 46.5149, 41.1672],
+        [ 7.5212,  3.3443,  3.6595,  ..., 40.8279, 43.8168, 38.3975]])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>weights <span class="op">=</span> gkernel(dist)</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>weights</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="24">
+<pre><code>tensor([[0.1596, 0.0282, 0.0246,  ..., 0.0000, 0.0000, 0.0000],
+        [0.0282, 0.1596, 0.1549,  ..., 0.0000, 0.0000, 0.0000],
+        [0.0246, 0.1549, 0.1596,  ..., 0.0000, 0.0000, 0.0000],
+        [0.0138, 0.0670, 0.0473,  ..., 0.0000, 0.0000, 0.0000],
+        [0.0017, 0.0652, 0.0547,  ..., 0.0000, 0.0000, 0.0000]])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>weights.shape, X.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="25">
+<pre><code>(torch.Size([5, 1024]), torch.Size([1024, 2]))</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="26">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>norm_constant <span class="op">=</span> <span class="dv">1</span> <span class="op">/</span> weights.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Note that we need to broadcast the normalization over the X and Y dimensions</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>reweighted <span class="op">=</span> (weights <span class="op">@</span> X) <span class="op">*</span> norm_constant[:, <span class="va">None</span>]</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>reweighted</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="26">
+<pre><code>tensor([[28.6881, 28.6938],
+        [26.6096, 28.3607],
+        [26.5901, 28.1598],
+        [26.3962, 29.4940],
+        [25.2566, 28.8559]])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="27">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mean_shift_batch(data, bs<span class="op">=</span><span class="dv">512</span>, iterations<span class="op">=</span><span class="dv">5</span>):</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    X <span class="op">=</span> data.clone()</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> <span class="bu">len</span>(X)</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(iterations):</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, n, bs):</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>            batch_idxs <span class="op">=</span> <span class="bu">slice</span>(i, <span class="bu">min</span>((i <span class="op">+</span> bs, n)))</span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>            batch <span class="op">=</span> X[batch_idxs]</span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>            delta <span class="op">=</span> X[<span class="va">None</span>, :] <span class="op">-</span> batch[:, <span class="va">None</span>]</span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>            weight <span class="op">=</span> gkernel(torch.einsum(<span class="st">"ijk,ijk-&gt;ij"</span>, delta, delta).sqrt())</span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>            norm <span class="op">=</span> <span class="dv">1</span> <span class="op">/</span> weight.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a>            X[batch_idxs] <span class="op">=</span> (weight <span class="op">@</span> X) <span class="op">*</span> norm[:, <span class="va">None</span>]</span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> X</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="28">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>DEVICE <span class="op">=</span> (</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mps"</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> torch.backends.mps.is_available()</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span> <span class="st">"cuda"</span></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> torch.cuda.is_available()</span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span> <span class="st">"cpu"</span></span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="29">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>data_acc <span class="op">=</span> data.to(DEVICE)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="30">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>mean_shift_batch(data_acc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="30">
+<pre><code>tensor([[ 26.9455,  29.1479],
+        [ 26.9455,  29.1479],
+        [ 26.9455,  29.1479],
+        ...,
+        [-16.9937,  20.3887],
+        [-16.9937,  20.3887],
+        [-16.9937,  20.3887]], device='mps:0')</code></pre>
+</div>
+</div>
+<section id="homework" class="level2">
+<h2 class="anchored" data-anchor-id="homework">Homework</h2>
+<p>Implement DBSCAN</p>
+<div class="cell" data-execution_count="31">
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> data.clone()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="32">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>n, _ <span class="op">=</span> X.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="33">
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>eps <span class="op">=</span> <span class="fl">2.5</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>min_points <span class="op">=</span> <span class="dv">25</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="34">
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>norms <span class="op">=</span> torch.<span class="bu">pow</span>(X[<span class="va">None</span>, :] <span class="op">-</span> X[:, <span class="va">None</span>], <span class="dv">2</span>).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">2</span>).sqrt()</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>norms</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="34">
+<pre><code>tensor([[ 0.0000,  4.6538,  4.8366,  ..., 48.0356, 51.1620, 45.6434],
+        [ 4.6538,  0.0000,  0.6129,  ..., 43.3835, 46.5297, 40.9945],
+        [ 4.8366,  0.6129,  0.0000,  ..., 43.2585, 46.4482, 40.8819],
+        ...,
+        [48.0356, 43.3835, 43.2585,  ...,  0.0000,  4.5282,  2.5374],
+        [51.1620, 46.5297, 46.4482,  ...,  4.5282,  0.0000,  5.9866],
+        [45.6434, 40.9945, 40.8819,  ...,  2.5374,  5.9866,  0.0000]])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="35">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>cluster_assignment <span class="op">=</span> torch.zeros(n)</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>cluster_assignment</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="35">
+<pre><code>tensor([0., 0., 0.,  ..., 0., 0., 0.])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="36">
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> functools <span class="im">import</span> lru_cache</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Optional</span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DontReassignCluster(<span class="pp">Exception</span>):</span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-8"><a href="#cb61-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-9"><a href="#cb61-9" aria-hidden="true" tabindex="-1"></a><span class="at">@lru_cache</span></span>
+<span id="cb61-10"><a href="#cb61-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> core_point_neighbords(point_idx) <span class="op">-&gt;</span> Optional:</span>
+<span id="cb61-11"><a href="#cb61-11" aria-hidden="true" tabindex="-1"></a>    dists <span class="op">=</span> norms[point_idx, :]</span>
+<span id="cb61-12"><a href="#cb61-12" aria-hidden="true" tabindex="-1"></a>    neighboring_point_idxs <span class="op">=</span> dists <span class="op">&lt;</span> eps</span>
+<span id="cb61-13"><a href="#cb61-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> neighboring_point_idxs.<span class="bu">sum</span>() <span class="op">&gt;</span> min_points:</span>
+<span id="cb61-14"><a href="#cb61-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> neighboring_point_idxs</span>
+<span id="cb61-15"><a href="#cb61-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-16"><a href="#cb61-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-17"><a href="#cb61-17" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> assign_cluster(cluster_id, point_idx):</span>
+<span id="cb61-18"><a href="#cb61-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cluster_assignment[point_idx]:</span>
+<span id="cb61-19"><a href="#cb61-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> DontReassignCluster</span>
+<span id="cb61-20"><a href="#cb61-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-21"><a href="#cb61-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># First, assign point to cluster</span></span>
+<span id="cb61-22"><a href="#cb61-22" aria-hidden="true" tabindex="-1"></a>    cluster_assignment[point_idx] <span class="op">=</span> cluster_id</span>
+<span id="cb61-23"><a href="#cb61-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-24"><a href="#cb61-24" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Then, if it is a core point, recursively assign the neighbors</span></span>
+<span id="cb61-25"><a href="#cb61-25" aria-hidden="true" tabindex="-1"></a>    dists <span class="op">=</span> norms[point_idx, :]</span>
+<span id="cb61-26"><a href="#cb61-26" aria-hidden="true" tabindex="-1"></a>    neighboring_point_idxs <span class="op">=</span> core_point_neighbords(point_idx)</span>
+<span id="cb61-27"><a href="#cb61-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> neighboring_point_idxs <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb61-28"><a href="#cb61-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i, is_neighbor <span class="kw">in</span> <span class="bu">enumerate</span>(neighboring_point_idxs):</span>
+<span id="cb61-29"><a href="#cb61-29" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> is_neighbor:</span>
+<span id="cb61-30"><a href="#cb61-30" aria-hidden="true" tabindex="-1"></a>                <span class="cf">try</span>:</span>
+<span id="cb61-31"><a href="#cb61-31" aria-hidden="true" tabindex="-1"></a>                    assign_cluster(cluster_id, i)</span>
+<span id="cb61-32"><a href="#cb61-32" aria-hidden="true" tabindex="-1"></a>                <span class="cf">except</span> DontReassignCluster:</span>
+<span id="cb61-33"><a href="#cb61-33" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">continue</span></span>
+<span id="cb61-34"><a href="#cb61-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-35"><a href="#cb61-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-36"><a href="#cb61-36" aria-hidden="true" tabindex="-1"></a>current_cluster_id <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb61-37"><a href="#cb61-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-38"><a href="#cb61-38" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> point_idx <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb61-39"><a href="#cb61-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> core_point_neighbords(point_idx) <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb61-40"><a href="#cb61-40" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
+<span id="cb61-41"><a href="#cb61-41" aria-hidden="true" tabindex="-1"></a>            assign_cluster(current_cluster_id, point_idx)</span>
+<span id="cb61-42"><a href="#cb61-42" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> DontReassignCluster:</span>
+<span id="cb61-43"><a href="#cb61-43" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
+<span id="cb61-44"><a href="#cb61-44" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb61-45"><a href="#cb61-45" aria-hidden="true" tabindex="-1"></a>            current_cluster_id <span class="op">+=</span> <span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="37">
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">4</span>, <span class="dv">4</span>))</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> cluster <span class="kw">in</span> cluster_assignment.unique():</span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>    ax.scatter(</span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span>X[cluster_assignment <span class="op">==</span> cluster, :].T,</span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span><span class="ss">f"Cluster </span><span class="sc">{</span><span class="bu">int</span>(cluster)<span class="sc">}</span><span class="ss">"</span> <span class="cf">if</span> cluster <span class="cf">else</span> <span class="st">"Noise"</span>,</span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>ax.legend()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="02_clustering_files/figure-html/cell-37-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
