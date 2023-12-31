@@ -266,11 +266,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#progresscb" id="toc-progresscb" class="nav-link" data-scroll-target="#progresscb">ProgressCB</a></li>
   <li><a href="#after" id="toc-after" class="nav-link" data-scroll-target="#after">after</a></li>
   <li><a href="#devicecb" id="toc-devicecb" class="nav-link" data-scroll-target="#devicecb">DeviceCB</a></li>
+  <li><a href="#to_cpu" id="toc-to_cpu" class="nav-link" data-scroll-target="#to_cpu">to_cpu</a></li>
   <li><a href="#fashion_mnist" id="toc-fashion_mnist" class="nav-link" data-scroll-target="#fashion_mnist">fashion_mnist</a></li>
   <li><a href="#trainlearner" id="toc-trainlearner" class="nav-link" data-scroll-target="#trainlearner">TrainLearner</a></li>
-  <li><a href="#to_cpu" id="toc-to_cpu" class="nav-link" data-scroll-target="#to_cpu">to_cpu</a></li>
-  <li><a href="#lrfindercb" id="toc-lrfindercb" class="nav-link" data-scroll-target="#lrfindercb">LRFinderCB</a></li>
   <li><a href="#show_doc" id="toc-show_doc" class="nav-link" data-scroll-target="#show_doc">show_doc</a></li>
+  <li><a href="#lrfindercb" id="toc-lrfindercb" class="nav-link" data-scroll-target="#lrfindercb">LRFinderCB</a></li>
   </ul></li>
   </ul>
 <div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/jeremy/slowai/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
@@ -323,15 +323,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <blockquote class="blockquote">
 <pre><code> DataLoaders (splits, nworkers:int=0, bs=32, collate_fn=&lt;function
               default_collate&gt;, tdir=&lt;TemporaryDirectory
-              '/tmp/tmpdpbo3_u2'&gt;)</code></pre>
+              '/tmp/tmprf8dt6h0'&gt;)</code></pre>
 </blockquote>
-<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<p>Wrapper around huggingface datasets to facilitate raw pytorch work</p>
 <div class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dls <span class="op">=</span> DataLoaders.from_hf(<span class="st">"fashion_mnist"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We should also add some helpers to facilitate processing images.</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L115" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L120" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="tensorize_images" class="level3">
 <h3 class="anchored" data-anchor-id="tensorize_images">tensorize_images</h3>
@@ -340,13 +340,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </blockquote>
 <p>Tensorize and normalize the image feature</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L108" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L110" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="batchify" class="level3">
 <h3 class="anchored" data-anchor-id="batchify">batchify</h3>
 <blockquote class="blockquote">
 <pre><code> batchify (f)</code></pre>
 </blockquote>
+<p>Convert a function that processes a single feature to processing a list of features</p>
 <div class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>dls <span class="op">=</span> tensorize_images(dls)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>xb <span class="op">=</span> dls.peek()[<span class="st">"image"</span>]</span>
@@ -359,11 +360,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>plt.hist(xb.view(<span class="op">-</span><span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="7">
-<pre><code>(array([13418.,   632.,   662.,  1059.,  1012.,  1076.,  1408.,  2054.,
+<pre><code>(array([13418.,   607.,   687.,  1014.,  1057.,  1076.,  1408.,  2054.,
          2393.,  1374.]),
- array([-0.82495719, -0.54097831, -0.25699943,  0.02697943,  0.3109583 ,
-         0.59493721,  0.87891603,  1.16289496,  1.44687378,  1.73085272,
-         2.01483154]),
+ array([-0.82342112, -0.54524243, -0.26706368,  0.01111503,  0.28929374,
+         0.56747246,  0.84565115,  1.12382984,  1.40200865,  1.68018734,
+         1.95836604]),
  &lt;BarContainer object of 10 artists&gt;)</code></pre>
 </div>
 <div class="cell-output cell-output-display">
@@ -413,43 +414,43 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>To add callbacks, we need a few clever Exception control flow signals</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L137" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L142" target="_blank" style="float:right; font-size:smaller">source</a></p>
 <section id="cancelepochexception" class="level3">
 <h3 class="anchored" data-anchor-id="cancelepochexception">CancelEpochException</h3>
-<p>Common base class for all non-exit exceptions.</p>
+<p>Skip to the next epoch</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L133" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L138" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="cancelbatchexception" class="level3">
 <h3 class="anchored" data-anchor-id="cancelbatchexception">CancelBatchException</h3>
-<p>Common base class for all non-exit exceptions.</p>
+<p>Skip to the next batch</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L129" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L134" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="cancelfitexception" class="level3">
 <h3 class="anchored" data-anchor-id="cancelfitexception">CancelFitException</h3>
-<p>Common base class for all non-exit exceptions.</p>
+<p>Exit fit context</p>
 <p>Then, we define the learner and callback classes</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L141" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L146" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="callback" class="level3">
 <h3 class="anchored" data-anchor-id="callback">Callback</h3>
 <blockquote class="blockquote">
 <pre><code> Callback ()</code></pre>
 </blockquote>
-<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<p>Modify the training behavior</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L147" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L154" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="with_cbs" class="level3">
 <h3 class="anchored" data-anchor-id="with_cbs">with_cbs</h3>
 <blockquote class="blockquote">
 <pre><code> with_cbs (nm)</code></pre>
 </blockquote>
-<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<p>Run the callbacks lifecycle at the apropriate time</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L165" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L174" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="learner" class="level3">
 <h3 class="anchored" data-anchor-id="learner">Learner</h3>
@@ -457,91 +458,103 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code> Learner (model, dls, loss_func=&lt;function mse_loss&gt;, lr=0.1, cbs=None,
           opt_func=&lt;class 'torch.optim.sgd.SGD'&gt;)</code></pre>
 </blockquote>
-<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<p>Flexible training loop</p>
 <p>This learner delegates all aspects of model training to callbacks, so something like this is neccesary.</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L249" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L260" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="traincb" class="level3">
 <h3 class="anchored" data-anchor-id="traincb">TrainCB</h3>
 <blockquote class="blockquote">
 <pre><code> TrainCB ()</code></pre>
 </blockquote>
-<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<p>Training specific behaviors for the <a href="https://jeremy.github.io/slowai/learner.html#learner"><code>Learner</code></a></p>
 <p>Now that we have the basic scaffolding, we’ll add metrics. Updating and storing state will be handled by <code>torchmetrics</code>, but we’ll define a callback to orchestrate the torchmetrics instances.</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L268" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L281" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="metricscb" class="level3">
 <h3 class="anchored" data-anchor-id="metricscb">MetricsCB</h3>
 <blockquote class="blockquote">
 <pre><code> MetricsCB (*ms, **metrics)</code></pre>
 </blockquote>
-<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<p>Update and print metrics</p>
 <p>Finally, we can define a Trainer callback specifically for the autoencoder objective.</p>
 <div class="cell" data-execution_count="15">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TrainAutoencoderCB(TrainCB):</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> predict(<span class="va">self</span>, learn):</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>        xb, <span class="op">*</span>_ <span class="op">=</span> learn.batch</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>        learn.preds <span class="op">=</span> learn.model(xb)</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_loss(<span class="va">self</span>, learn):</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>        xb, <span class="op">*</span>_ <span class="op">=</span> learn.batch</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>        learn.loss <span class="op">=</span> learn.loss_func(learn.preds, xb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Modify the training loop for the ELBO objective"""</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> predict(<span class="va">self</span>, learn):</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>        xb, <span class="op">*</span>_ <span class="op">=</span> learn.batch</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>        learn.preds <span class="op">=</span> learn.model(xb)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_loss(<span class="va">self</span>, learn):</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>        xb, <span class="op">*</span>_ <span class="op">=</span> learn.batch</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>        learn.loss <span class="op">=</span> learn.loss_func(learn.preds, xb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Let’s also define some additional useful callbacks:</p>
+<p>Let’s also define some additional useful callbacks and dataset helpers:</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L316" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L334" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="progresscb" class="level3">
 <h3 class="anchored" data-anchor-id="progresscb">ProgressCB</h3>
 <blockquote class="blockquote">
 <pre><code> ProgressCB (plot=False)</code></pre>
 </blockquote>
-<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<p>Report the progress</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L312" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L329" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="after" class="level3">
 <h3 class="anchored" data-anchor-id="after">after</h3>
 <blockquote class="blockquote">
 <pre><code> after (callback_cls:Type[__main__.Callback])</code></pre>
 </blockquote>
+<p>Run a callback after another callback</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L300" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L315" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="devicecb" class="level3">
 <h3 class="anchored" data-anchor-id="devicecb">DeviceCB</h3>
 <blockquote class="blockquote">
-<pre><code> DeviceCB (device='cuda')</code></pre>
+<pre><code> DeviceCB (device='cpu')</code></pre>
 </blockquote>
-<p>Initialize self. See help(type(self)) for accurate signature.</p>
-<p>Putting it all together</p>
+<p>Move tensors and model to the CPU/GPU/etc</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L361" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L381" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="to_cpu" class="level3">
+<h3 class="anchored" data-anchor-id="to_cpu">to_cpu</h3>
+<blockquote class="blockquote">
+<pre><code> to_cpu (x)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L392" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="fashion_mnist" class="level3">
 <h3 class="anchored" data-anchor-id="fashion_mnist">fashion_mnist</h3>
 <blockquote class="blockquote">
 <pre><code> fashion_mnist ()</code></pre>
 </blockquote>
-<div class="cell" data-execution_count="18">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> get_ae_model()</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>dls <span class="op">=</span> fashion_mnist()</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>cbs <span class="op">=</span> [</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    MetricsCB(),</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    DeviceCB(),</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    TrainAutoencoderCB(),</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    ProgressCB(plot<span class="op">=</span><span class="va">True</span>),</span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> Learner(</span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    model,</span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    dls,</span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    F.mse_loss,</span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    lr<span class="op">=</span><span class="fl">0.01</span>,</span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    cbs<span class="op">=</span>cbs,</span>
-<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    opt_func<span class="op">=</span>torch.optim.AdamW,</span>
-<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>).fit(<span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Helper to use fashion MNIST</p>
+<p>Putting it all together</p>
+<div class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> get_ae_model()</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>dls <span class="op">=</span> fashion_mnist()</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>cbs <span class="op">=</span> [</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    MetricsCB(),</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    DeviceCB(),</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    TrainAutoencoderCB(),</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    ProgressCB(plot<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> Learner(</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    model,</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    dls,</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    F.mse_loss,</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    lr<span class="op">=</span><span class="fl">0.01</span>,</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>    cbs<span class="op">=</span>cbs,</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>    opt_func<span class="op">=</span>torch.optim.AdamW,</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>).fit(<span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 
 <style>
@@ -571,22 +584,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>0.971</td>
+<td>0.939</td>
 <td>0</td>
 <td>train</td>
 </tr>
 <tr class="even">
-<td>0.770</td>
+<td>0.776</td>
 <td>0</td>
 <td>eval</td>
 </tr>
 <tr class="odd">
-<td>0.742</td>
+<td>0.747</td>
 <td>1</td>
 <td>train</td>
 </tr>
 <tr class="even">
-<td>0.717</td>
+<td>0.716</td>
 <td>1</td>
 <td>eval</td>
 </tr>
@@ -594,34 +607,34 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="08_learner_files/figure-html/cell-22-output-3.png" class="img-fluid"></p>
+<p><img src="08_learner_files/figure-html/cell-23-output-3.png" class="img-fluid"></p>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>CPU times: user 24 s, sys: 1.39 s, total: 25.4 s
-Wall time: 27.7 s</code></pre>
+<pre><code>CPU times: user 24.7 s, sys: 1.6 s, total: 26.3 s
+Wall time: 28.7 s</code></pre>
 </div>
 </div>
-<div class="cell" data-jupyter="{&quot;source_hidden&quot;:true}" data-execution_count="19">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> viz(model, xb):</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    xb <span class="op">=</span> xb.to(def_device)</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    pred <span class="op">=</span> model(xb)</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    paired <span class="op">=</span> []</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">min</span>(xb.shape[<span class="dv">0</span>], <span class="dv">8</span>)):</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>        paired.append(xb[i, ...])</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>        paired.append(pred[i, ...])</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    show_images(paired, figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">8</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-jupyter="{&quot;source_hidden&quot;:true}" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> viz(model, xb):</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    xb <span class="op">=</span> xb.to(def_device)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    pred <span class="op">=</span> model(xb)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    paired <span class="op">=</span> []</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">min</span>(xb.shape[<span class="dv">0</span>], <span class="dv">8</span>)):</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>        paired.append(xb[i, ...])</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>        paired.append(pred[i, ...])</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    show_images(paired, figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">8</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-execution_count="20">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>xbt, _ <span class="op">=</span> dls.peek(<span class="st">"test"</span>)</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>viz(model, xbt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>xbt, _ <span class="op">=</span> dls.peek(<span class="st">"test"</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>viz(model, xbt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="08_learner_files/figure-html/cell-24-output-1.png" class="img-fluid"></p>
+<p><img src="08_learner_files/figure-html/cell-25-output-1.png" class="img-fluid"></p>
 </div>
 </div>
 <p>Still not good, but less code!</p>
 <p>I don’t really like the idea of delegating the core training functions to callbacks, so we can just implement them here:</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L365" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L397" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="trainlearner" class="level3">
 <h3 class="anchored" data-anchor-id="trainlearner">TrainLearner</h3>
@@ -629,109 +642,28 @@ Wall time: 27.7 s</code></pre>
 <pre><code> TrainLearner (model, dls, loss_func=&lt;function mse_loss&gt;, lr=0.1,
                cbs=None, opt_func=&lt;class 'torch.optim.sgd.SGD'&gt;)</code></pre>
 </blockquote>
-<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<p>Sane training loop</p>
 <p>This works pretty similarly</p>
-<div class="cell" data-execution_count="22">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> AutoencoderTrainer(TrainLearner):</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> predict(<span class="va">self</span>):</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>        xb, <span class="op">*</span>_ <span class="op">=</span> <span class="va">self</span>.batch</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.preds <span class="op">=</span> <span class="va">self</span>.model(xb)</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_loss(<span class="va">self</span>):</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>        xb, <span class="op">*</span>_ <span class="op">=</span> <span class="va">self</span>.batch</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.loss <span class="op">=</span> <span class="va">self</span>.loss_func(<span class="va">self</span>.preds, xb)</span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>cbs <span class="op">=</span> [MetricsCB(), DeviceCB(), ProgressCB(plot<span class="op">=</span><span class="va">True</span>)]</span>
-<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> AutoencoderTrainer(</span>
-<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>    get_ae_model(),</span>
-<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>    dls,</span>
-<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>    F.mse_loss,</span>
-<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>    lr<span class="op">=</span><span class="fl">0.01</span>,</span>
-<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>    cbs<span class="op">=</span>cbs,</span>
-<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>    opt_func<span class="op">=</span>torch.optim.AdamW,</span>
-<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>).fit(<span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-
-<style>
-    /* Turns off some styling */
-    progress {
-        /* gets rid of default border in Firefox and Opera. */
-        border: none;
-        /* Needs to be in here for Safari polyfill so background images work as expected. */
-        background-size: auto;
-    }
-    progress:not([value]), progress:not([value])::-webkit-progress-bar {
-        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
-    }
-    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
-        background: #F44336;
-    }
-</style>
-</div>
-<div class="cell-output cell-output-display">
-<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th">loss</th>
-<th data-quarto-table-cell-role="th">epoch</th>
-<th data-quarto-table-cell-role="th">train</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>0.965</td>
-<td>0</td>
-<td>train</td>
-</tr>
-<tr class="even">
-<td>0.769</td>
-<td>0</td>
-<td>eval</td>
-</tr>
-<tr class="odd">
-<td>0.749</td>
-<td>1</td>
-<td>train</td>
-</tr>
-<tr class="even">
-<td>0.721</td>
-<td>1</td>
-<td>eval</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="cell-output cell-output-display">
-<p><img src="08_learner_files/figure-html/cell-26-output-3.png" class="img-fluid"></p>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>CPU times: user 22.1 s, sys: 98.1 ms, total: 22.2 s
-Wall time: 22.2 s</code></pre>
-</div>
-</div>
-<p>Can we improve the reconstruction? Let’s implement a simple momentum.</p>
 <div class="cell" data-execution_count="23">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MomentumCB(Callback):</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, momentum<span class="op">=</span><span class="fl">0.85</span>):</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.momentum <span class="op">=</span> momentum</span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> zero_grad(<span class="va">self</span>, learn):</span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">with</span> torch.no_grad():</span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> p <span class="kw">in</span> learn.model.parameters():</span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>                p.grad <span class="op">*=</span> <span class="va">self</span>.momentum</span>
-<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>cbs <span class="op">=</span> [MetricsCB(), DeviceCB(), ProgressCB(plot<span class="op">=</span><span class="va">True</span>), MomentumCB()]</span>
-<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> AutoencoderTrainer(</span>
-<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>    get_ae_model(),</span>
-<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>    dls,</span>
-<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>    F.mse_loss,</span>
-<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>    lr<span class="op">=</span><span class="fl">0.01</span>,</span>
-<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>    cbs<span class="op">=</span>cbs,</span>
-<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>    opt_func<span class="op">=</span>torch.optim.AdamW,</span>
-<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a>).fit(<span class="dv">2</span>)</span>
-<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a>viz(model, xbt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> AutoencoderTrainer(TrainLearner):</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> predict(<span class="va">self</span>):</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>        xb, <span class="op">*</span>_ <span class="op">=</span> <span class="va">self</span>.batch</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.preds <span class="op">=</span> <span class="va">self</span>.model(xb)</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_loss(<span class="va">self</span>):</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>        xb, <span class="op">*</span>_ <span class="op">=</span> <span class="va">self</span>.batch</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.loss <span class="op">=</span> <span class="va">self</span>.loss_func(<span class="va">self</span>.preds, xb)</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>cbs <span class="op">=</span> [MetricsCB(), DeviceCB(), ProgressCB(plot<span class="op">=</span><span class="va">True</span>)]</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> AutoencoderTrainer(</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>    get_ae_model(),</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>    dls,</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>    F.mse_loss,</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>    lr<span class="op">=</span><span class="fl">0.01</span>,</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>    cbs<span class="op">=</span>cbs,</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>    opt_func<span class="op">=</span>torch.optim.AdamW,</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>).fit(<span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 
 <style>
@@ -761,22 +693,22 @@ Wall time: 22.2 s</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td>0.875</td>
+<td>0.941</td>
 <td>0</td>
 <td>train</td>
 </tr>
 <tr class="even">
-<td>0.718</td>
+<td>0.757</td>
 <td>0</td>
 <td>eval</td>
 </tr>
 <tr class="odd">
-<td>0.706</td>
+<td>0.737</td>
 <td>1</td>
 <td>train</td>
 </tr>
 <tr class="even">
-<td>0.689</td>
+<td>0.712</td>
 <td>1</td>
 <td>eval</td>
 </tr>
@@ -787,32 +719,96 @@ Wall time: 22.2 s</code></pre>
 <p><img src="08_learner_files/figure-html/cell-27-output-3.png" class="img-fluid"></p>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>CPU times: user 22 s, sys: 104 ms, total: 22.1 s
-Wall time: 22.2 s</code></pre>
+<pre><code>CPU times: user 22.9 s, sys: 81 ms, total: 23 s
+Wall time: 23 s</code></pre>
+</div>
+</div>
+<p>Can we improve the reconstruction? Let’s implement a simple momentum.</p>
+<div class="cell" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MomentumCB(Callback):</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, momentum<span class="op">=</span><span class="fl">0.85</span>):</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.momentum <span class="op">=</span> momentum</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> zero_grad(<span class="va">self</span>, learn):</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">with</span> torch.no_grad():</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> p <span class="kw">in</span> learn.model.parameters():</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>                p.grad <span class="op">*=</span> <span class="va">self</span>.momentum</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>cbs <span class="op">=</span> [MetricsCB(), DeviceCB(), ProgressCB(plot<span class="op">=</span><span class="va">True</span>), MomentumCB()]</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> AutoencoderTrainer(</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>    get_ae_model(),</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>    dls,</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>    F.mse_loss,</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>    lr<span class="op">=</span><span class="fl">0.01</span>,</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>    cbs<span class="op">=</span>cbs,</span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>    opt_func<span class="op">=</span>torch.optim.AdamW,</span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>).fit(<span class="dv">2</span>)</span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>viz(model, xbt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="08_learner_files/figure-html/cell-27-output-5.png" class="img-fluid"></p>
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th">loss</th>
+<th data-quarto-table-cell-role="th">epoch</th>
+<th data-quarto-table-cell-role="th">train</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1.232</td>
+<td>0</td>
+<td>train</td>
+</tr>
+<tr class="even">
+<td>1.193</td>
+<td>0</td>
+<td>eval</td>
+</tr>
+<tr class="odd">
+<td>1.175</td>
+<td>1</td>
+<td>train</td>
+</tr>
+<tr class="even">
+<td>1.146</td>
+<td>1</td>
+<td>eval</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="08_learner_files/figure-html/cell-28-output-3.png" class="img-fluid"></p>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>CPU times: user 22.6 s, sys: 91.6 ms, total: 22.7 s
+Wall time: 22.7 s</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="08_learner_files/figure-html/cell-28-output-5.png" class="img-fluid"></p>
 </div>
 </div>
 <p>Not especially impressive.</p>
 <p>What about using the automated learning rate finder?</p>
-<hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L384" target="_blank" style="float:right; font-size:smaller">source</a></p>
-</section>
-<section id="to_cpu" class="level3">
-<h3 class="anchored" data-anchor-id="to_cpu">to_cpu</h3>
-<blockquote class="blockquote">
-<pre><code> to_cpu (x)</code></pre>
-</blockquote>
-<hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L395" target="_blank" style="float:right; font-size:smaller">source</a></p>
-</section>
-<section id="lrfindercb" class="level3">
-<h3 class="anchored" data-anchor-id="lrfindercb">LRFinderCB</h3>
-<blockquote class="blockquote">
-<pre><code> LRFinderCB (gamma=1.3, max_mult=3)</code></pre>
-</blockquote>
-<p>Initialize self. See help(type(self)) for accurate signature.</p>
 <hr>
 <p><a href="https://github.com/fastai/nbdev/blob/master/nbdev/showdoc.py#LNone" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
@@ -864,7 +860,16 @@ Wall time: 22.2 s</code></pre>
 </tr>
 </tbody>
 </table>
-<div class="cell" data-execution_count="27">
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L416" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="lrfindercb" class="level3">
+<h3 class="anchored" data-anchor-id="lrfindercb">LRFinderCB</h3>
+<blockquote class="blockquote">
+<pre><code> LRFinderCB (gamma=1.3, max_mult=3)</code></pre>
+</blockquote>
+<p>Find an apopriate learning rate by increasing it by a constant factor for each batch until the loss diverges</p>
+<div class="cell" data-execution_count="26">
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> AutoencoderTrainer(</span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    get_ae_model(),</span>
 <span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    dls,</span>
@@ -895,7 +900,7 @@ Wall time: 22.2 s</code></pre>
 
     <div>
       <progress value="2" class="" max="10" style="width:300px; height:20px; vertical-align: middle;"></progress>
-      20.00% [2/10 00:17&lt;01:09]
+      20.00% [2/10 00:17&lt;01:10]
     </div>
     
 
@@ -909,12 +914,12 @@ Wall time: 22.2 s</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td>1.249</td>
+<td>1.274</td>
 <td>0</td>
 <td>train</td>
 </tr>
 <tr class="even">
-<td>1.026</td>
+<td>1.090</td>
 <td>1</td>
 <td>train</td>
 </tr>
@@ -923,8 +928,8 @@ Wall time: 22.2 s</code></pre>
 <p>
 
     </p><div>
-      <progress value="18" class="" max="30" style="width:300px; height:20px; vertical-align: middle;"></progress>
-      60.00% [18/30 00:05&lt;00:03 1.035]
+      <progress value="19" class="" max="30" style="width:300px; height:20px; vertical-align: middle;"></progress>
+      63.33% [19/30 00:05&lt;00:03 2.001]
     </div>
     
 </div>
@@ -937,7 +942,7 @@ Wall time: 22.2 s</code></pre>
 </div>
 </div>
 <p>It looks like 1e-2 is a good learning rate.</p>
-<div class="cell" data-execution_count="28">
+<div class="cell" data-execution_count="27">
 <div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>cbs <span class="op">=</span> [MetricsCB(), DeviceCB(), ProgressCB(plot<span class="op">=</span><span class="va">True</span>), MomentumCB()]</span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> AutoencoderTrainer(</span>
 <span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    get_ae_model(),</span>
@@ -977,22 +982,22 @@ Wall time: 22.2 s</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td>0.985</td>
+<td>0.923</td>
 <td>0</td>
 <td>train</td>
 </tr>
 <tr class="even">
-<td>0.731</td>
+<td>0.640</td>
 <td>0</td>
 <td>eval</td>
 </tr>
 <tr class="odd">
-<td>0.631</td>
+<td>0.617</td>
 <td>1</td>
 <td>train</td>
 </tr>
 <tr class="even">
-<td>0.593</td>
+<td>0.598</td>
 <td>1</td>
 <td>eval</td>
 </tr>

@@ -101,15 +101,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="styles.css">
 <meta property="og:title" content="slowai - Calculus and Backprop">
 <meta property="og:description" content="We need some principles from calculus and linear algebra">
-<meta property="og:image" content="https://jeremy.github.io/slowai/../images/conveyer_belt.png">
+<meta property="og:image" content="https://jeremy.github.io/slowai/03_calculus_files/figure-html/cell-2-output-1.png">
 <meta property="og:site-name" content="slowai">
-<meta property="og:image:height" content="566">
-<meta property="og:image:width" content="990">
+<meta property="og:image:height" content="274">
+<meta property="og:image:width" content="284">
 <meta name="twitter:title" content="slowai - Calculus and Backprop">
 <meta name="twitter:description" content="We need some principles from calculus and linear algebra">
-<meta name="twitter:image" content="https://jeremy.github.io/slowai/../images/conveyer_belt.png">
-<meta name="twitter:image-height" content="566">
-<meta name="twitter:image-width" content="990">
+<meta name="twitter:image" content="https://jeremy.github.io/slowai/03_calculus_files/figure-html/cell-2-output-1.png">
+<meta name="twitter:image-height" content="274">
+<meta name="twitter:image-width" content="284">
 <meta name="twitter:card" content="summary_large_image">
 </head>
 
@@ -257,7 +257,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#for-x" id="toc-for-x" class="nav-link" data-scroll-target="#for-x">For <span class="math inline">\(X\)</span>…</a></li>
   <li><a href="#for-w" id="toc-for-w" class="nav-link" data-scroll-target="#for-w">For <span class="math inline">\(W\)</span>…</a></li>
-  <li><a href="#for-b" id="toc-for-b" class="nav-link" data-scroll-target="#for-b">For <span class="math inline">\(b\)</span>…</a></li>
+  <li><a href="#for-b" id="toc-for-b" class="nav-link" data-scroll-target="#for-b">For <span class="math inline">\(B\)</span>…</a></li>
   </ul></li>
   <li><a href="#relu" id="toc-relu" class="nav-link" data-scroll-target="#relu">ReLU</a></li>
   </ul></li>
@@ -318,9 +318,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 \end{align*}
 \]</span></p>
 <p>(Shared term in numerator and denominator.)</p>
-<p>This is simple arithmetic! For a geometric interpretation, imagine a conveyer belt system, where a motor is connected to A, pulling B and C. Suppose A has a circumference twice of B, and B twice of C. The rate of rotation of C is <span class="math inline">\(2 \times 2=4\)</span>X that of A.</p>
-<p><img src="../images/conveyer_belt.png" class="img-fluid"></p>
-<p>This corresponds to the system of equations:</p>
+<p>This is simple arithmetic! For a geometric interpretation, imagine riding a bicycle on a moving sidewalk. If you are cycling at 2 kilometers per hour and the sidewalk was movinig at 2 kilometers per hour, then your overall speed is 4 kilometers per hour.</p>
 <p><span class="math display">\[
 \begin{align}
 \frac{\Delta C}{\Delta B} &amp;= 2\\
@@ -328,12 +326,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 \therefore \frac{\Delta C}{\Delta A} &amp;= \frac{\Delta C}{\Delta B} \left( \frac{\Delta B}{\Delta A} \right) = 2 \times 2 =4 \\
 \end{align}
 \]</span></p>
-<p>If these functions were non-linear, imagine the circumferences of these “functions” changing.</p>
-<p>https://webspace.ship.edu/msrenault/geogebracalculus/derivative_intuitive_chain_rule.html</p>
+<p>For non-linear functions, imagine the speed of the sidewalk changing.</p>
+<p>For an intuitive demonstration of the chain rule, <a href="https://webspace.ship.edu/msrenault/geogebracalculus/derivative_intuitive_chain_rule.html">click here.</a></p>
 </section>
 <section id="neural-networks" class="level2">
 <h2 class="anchored" data-anchor-id="neural-networks">Neural Networks</h2>
-<p>Suppose we wanted to model this function with a neural network.</p>
+<p>How does this relate to deep learning? Suppose we wanted to model this function with a neural network.</p>
 <div class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.linspace(<span class="dv">0</span>, <span class="dv">10</span>, <span class="dv">100</span>)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> (x <span class="op">-</span> <span class="fl">2.5</span>) <span class="op">**</span> <span class="dv">2</span></span>
@@ -372,114 +370,73 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <blockquote class="blockquote">
 <pre><code> MNISTDataModule (bs=128)</code></pre>
 </blockquote>
-<p>A DataModule standardizes the training, val, test splits, data preparation and transforms. The main advantage is consistent data splits, data preparation and transforms across models.</p>
-<p>Example::</p>
-<pre><code>import lightning as L
-import torch.utils.data as data
-from lightning.pytorch.demos.boring_classes import RandomDataset
-
-class MyDataModule(L.LightningDataModule):
-    def prepare_data(self):
-        # download, IO, etc. Useful with shared filesystems
-        # only called on 1 GPU/TPU in distributed
-        ...
-
-    def setup(self, stage):
-        # make assignments here (val/train/test split)
-        # called on every process in DDP
-        dataset = RandomDataset(1, 100)
-        self.train, self.val, self.test = data.random_split(
-            dataset, [80, 10, 10], generator=torch.Generator().manual_seed(42)
-        )
-
-    def train_dataloader(self):
-        return data.DataLoader(self.train)
-
-    def val_dataloader(self):
-        return data.DataLoader(self.val)
-
-    def test_dataloader(self):
-        return data.DataLoader(self.test)
-
-    def teardown(self):
-        # clean up state after the trainer stops, delete files...
-        # called on every process in DDP
-        ...</code></pre>
-<div class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>dm <span class="op">=</span> MNISTDataModule()</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>dm.setup()</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>X_trn, y_true <span class="op">=</span> dm.as_matrix(<span class="st">"trn"</span>, as_<span class="op">=</span><span class="st">"numpy"</span>)</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>show_image(X_trn[<span class="dv">0</span>, ...].squeeze())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<p><img src="03_calculus_files/figure-html/cell-5-output-1.png" class="img-fluid"></p>
-</div>
-</div>
+<p>MNIST data Module</p>
 <p>It’s a bit cleaner to deal with images as vectors for this exercise.</p>
 <div class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>X_trn <span class="op">=</span> rearrange(X_trn, <span class="st">"b h w -&gt; b (h w)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>X_trn <span class="op">=</span> rearrange(X_trn, <span class="st">"b h w -&gt; b (h w)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Say we wanted to classify a digit as a “seven” (or not) based on a single pixel. A trained linear model would find some coefficient and you would draw some line dividing sevens from non-sevens.</p>
 <p>Of course, this is pretty limiting. What if this surface had a lot of curvature?</p>
 <div class="cell" data-jupyter="{&quot;source_hidden&quot;:true}" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.linspace(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">100</span>)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>y_t <span class="op">=</span> <span class="dv">1</span> <span class="op">-</span> x<span class="op">**</span><span class="dv">2</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> <span class="op">-</span><span class="fl">0.95</span> <span class="op">*</span> x <span class="op">+</span> <span class="fl">1.1</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">3</span>, <span class="dv">3</span>))</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>ax.plot(x, y_t, label<span class="op">=</span><span class="st">"True"</span>)</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>ax.plot(x, y_pred, label<span class="op">=</span><span class="st">"Pred"</span>)</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>ax.<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">"Pixel Intensity"</span>, ylabel<span class="op">=</span><span class="st">"P(Seven)"</span>)</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>fig.legend()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.linspace(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">100</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>y_t <span class="op">=</span> <span class="dv">1</span> <span class="op">-</span> x<span class="op">**</span><span class="dv">2</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> <span class="op">-</span><span class="fl">0.95</span> <span class="op">*</span> x <span class="op">+</span> <span class="fl">1.1</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">3</span>, <span class="dv">3</span>))</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>ax.plot(x, y_t, label<span class="op">=</span><span class="st">"True"</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>ax.plot(x, y_pred, label<span class="op">=</span><span class="st">"Pred"</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>ax.<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">"Pixel Intensity"</span>, ylabel<span class="op">=</span><span class="st">"P(Seven)"</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>fig.legend()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="03_calculus_files/figure-html/cell-7-output-1.png" class="img-fluid"></p>
+<p><img src="03_calculus_files/figure-html/cell-6-output-1.png" class="img-fluid"></p>
 </div>
 </div>
 <p>How do fit the sum of rectified lines like before?</p>
 <p>To make this more interesting, let’s consider using all pixels, for all images.</p>
 <p>Let’s define some parameters and helpers.</p>
 <div class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> relu(x):</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.clip(x, a_min<span class="op">=</span><span class="dv">0</span>, a_max<span class="op">=</span><span class="va">None</span>)</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>n, m <span class="op">=</span> X_trn.shape</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>nh <span class="op">=</span> <span class="dv">50</span>  <span class="co"># num. hidden dimensions</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>n, m</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> relu(x):</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.clip(x, a_min<span class="op">=</span><span class="dv">0</span>, a_max<span class="op">=</span><span class="va">None</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>n, m <span class="op">=</span> X_trn.shape</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>nh <span class="op">=</span> <span class="dv">50</span>  <span class="co"># num. hidden dimensions</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>n, m</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="9">
 <pre><code>(60000, 784)</code></pre>
 </div>
 </div>
 <p>Our results are going to be non-sense here, but this gives us the right dimensions for everything.</p>
 <div class="cell" data-execution_count="10">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>W0 <span class="op">=</span> np.random.randn(m, nh)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>b0 <span class="op">=</span> np.zeros(nh)</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>W1 <span class="op">=</span> np.random.randn(nh, <span class="dv">1</span>)</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>b1 <span class="op">=</span> np.zeros(<span class="dv">1</span>)</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>l0 <span class="op">=</span> X_trn <span class="op">@</span> W0 <span class="op">+</span> b0</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>l1 <span class="op">=</span> relu(l0)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> l1 <span class="op">@</span> W1 <span class="op">+</span> b1</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>y_pred[:<span class="dv">5</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>W0 <span class="op">=</span> np.random.randn(m, nh)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>b0 <span class="op">=</span> np.zeros(nh)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>W1 <span class="op">=</span> np.random.randn(nh, <span class="dv">1</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>b1 <span class="op">=</span> np.zeros(<span class="dv">1</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>l0 <span class="op">=</span> X_trn <span class="op">@</span> W0 <span class="op">+</span> b0</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>l1 <span class="op">=</span> relu(l0)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> l1 <span class="op">@</span> W1 <span class="op">+</span> b1</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>y_pred[:<span class="dv">5</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="10">
-<pre><code>array([[ 20.64558787],
-       [-17.49943048],
-       [-40.15099661],
-       [-20.96064613],
-       [-28.6419001 ]])</code></pre>
+<pre><code>array([[ -9.87308795],
+       [-24.17324311],
+       [ 32.42885041],
+       [  6.0755439 ],
+       [-65.67629667]])</code></pre>
 </div>
 </div>
 <p>Let’s compute an regression loss to get the model to predict the label. (This isn’t formally apropriate but it gives us the intuition.)</p>
 <div class="cell" data-execution_count="11">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>y_pred.shape, y_true.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>y_pred.shape, y_true.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="11">
 <pre><code>((60000, 1), (60000,))</code></pre>
 </div>
 </div>
 <div class="cell" data-execution_count="12">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>diff <span class="op">=</span> y_pred.T <span class="op">-</span> y_true</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>mse <span class="op">=</span> (diff<span class="op">**</span><span class="dv">2</span>).mean()</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>mse</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>diff <span class="op">=</span> y_pred.T <span class="op">-</span> y_true</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>mse <span class="op">=</span> (diff<span class="op">**</span><span class="dv">2</span>).mean()</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>mse</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="12">
-<pre><code>1349.5939954853677</code></pre>
+<pre><code>1979.1768273281134</code></pre>
 </div>
 </div>
 <p>Eventually, at the end of the forward pass, we end up with a <strong>single number</strong>. We compute the loss for each example in the batch and take the batchwise mean or sum of the loss. Then, we use this along with the gradients with respect to each parameter to update the weights,</p>
@@ -503,230 +460,277 @@ f'(g(x, y)) &amp; = f'((x-y)^2 / n) \\
 \]</span></p>
 <p>Let’s verify:</p>
 <div class="cell" data-execution_count="13">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> n <span class="op">==</span> <span class="dv">60000</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>x, y <span class="op">=</span> sympy.symbols(<span class="st">"x y"</span>)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>sympy.diff(((x <span class="op">-</span> y) <span class="op">**</span> <span class="dv">2</span>) <span class="op">/</span> n, x)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> n <span class="op">==</span> <span class="dv">60000</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>x, y <span class="op">=</span> sympy.symbols(<span class="st">"x y"</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>sympy.diff(((x <span class="op">-</span> y) <span class="op">**</span> <span class="dv">2</span>) <span class="op">/</span> n, x)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="13">
 <p><span class="math inline">\(\displaystyle \frac{x}{30000} - \frac{y}{30000}\)</span></p>
 </div>
 </div>
-<p>Great. Now, in code:</p>
+<p>Great. Now, to implement this in code, we need a way to store gradients on tensors themselves.</p>
 <div class="cell" data-execution_count="14">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> T:</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Wrapper for numpy arrays to help store a gradient"""</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    value: Any</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    g: Any <span class="op">=</span> <span class="va">None</span></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__getattr__</span>(<span class="va">self</span>, t):</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">getattr</span>(<span class="va">self</span>.value, t)</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__getitem__</span>(<span class="va">self</span>, i):</span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.value[i]</span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">@property</span></span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> v(<span class="va">self</span>):</span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.value</span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mse_grad(y_pred: T, y_true: np.array):</span>
-<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>    diff <span class="op">=</span> y_pred.squeeze() <span class="op">-</span> y_true</span>
-<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>    y_pred_g <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> diff <span class="op">/</span> n</span>
-<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>    y_pred.g <span class="op">=</span> y_pred_g[:, <span class="va">None</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> T:</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Wrapper for numpy arrays to help store a gradient"""</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    value: Any</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    g: Any <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__getattr__</span>(<span class="va">self</span>, t):</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">getattr</span>(<span class="va">self</span>.value, t)</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__getitem__</span>(<span class="va">self</span>, i):</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.value[i]</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">@property</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> v(<span class="va">self</span>):</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.value</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Then, we can implement it like so:</p>
+<div class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mse_grad(y_pred: T, y_true: np.array):</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    diff <span class="op">=</span> y_pred.squeeze() <span class="op">-</span> y_true</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    y_pred_g <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> diff <span class="op">/</span> n</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    y_pred.g <span class="op">=</span> y_pred_g[:, <span class="va">None</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Continuing on with the linear transformation layer, we’ll review the mathematics then implement the code.</p>
 </section>
 <section id="linear-layer" class="level3">
 <h3 class="anchored" data-anchor-id="linear-layer">Linear layer</h3>
 <p>For a linear layer, the gradient is derived like so:</p>
-<p>Let <span class="math inline">\(L = l(N)\)</span> and <span class="math inline">\(N_{W,b}(X)\)</span> is a neural network with parameters <span class="math inline">\(W, b\)</span> and an input <span class="math inline">\(X\)</span>. We want to compute the partial derivates of <span class="math inline">\(L\)</span> with respect to <span class="math inline">\(W\)</span>, <span class="math inline">\(B\)</span> and <span class="math inline">\(X\)</span> to pass upstream and manipulate the parameters. Therefore, we want to compute the chain rule:</p>
+<p>Let <span class="math inline">\(L = loss(Y)\)</span> and <span class="math inline">\(Y = WX+B\)</span> be a neural network. We want to compute the partial derivates of <span class="math inline">\(L\)</span> with respect to <span class="math inline">\(W\)</span>, <span class="math inline">\(B\)</span> and <span class="math inline">\(X\)</span> to, ultimately, reduce <span class="math inline">\(L\)</span>.</p>
 <section id="for-x" class="level4">
 <h4 class="anchored" data-anchor-id="for-x">For <span class="math inline">\(X\)</span>…</h4>
-<p>By the chain rule:</p>
-<p><span class="math display">\[\frac{\partial L}{\partial X} = \frac{\partial L}{\partial N} \cdot \frac{\partial N}{\partial X}\]</span></p>
-<ul>
-<li><span class="math inline">\(\frac{\partial L}{\partial N}\)</span> is the change of the loss with respect to the output of the linear layer, <code>out.g</code>.</li>
-<li><span class="math inline">\(\frac{\partial N}{\partial X}\)</span> is the change of the output with respect to <span class="math inline">\(X\)</span>, or <span class="math inline">\(w.T\)</span>, which is simply direction in which <code>x</code> was manipulated</li>
-</ul>
+<p>Starting with a single, <span class="math inline">\(j\)</span>th parameter of the <span class="math inline">\(i\)</span>th example, <span class="math inline">\(x_j^i\)</span></p>
+<p><span class="math display">\[
+\begin{align*}
+\frac{\partial L}{\partial x_j^i} &amp;= \frac{\partial L}{\partial Y} \cdot \frac{\partial Y}{\partial x_j^i} \\
+                                  &amp;= \sum_{k=1}^{N} \frac{\partial L}{\partial y^k} \cdot \frac{\partial y^k}{\partial x_j^i}
+\end{align*}
+\]</span></p>
+<p>Note that <span class="math inline">\(\frac{\partial y^k}{\partial x_j^i} = 0\)</span> if <span class="math inline">\(k \neq i\)</span> (i.e., the output of an example passed through the network is not a function of the input of a different example). Therefore,</p>
+<p><span class="math display">\[
+\begin{align*}
+\sum_{k=1}^{N} \frac{\partial L}{\partial y^k} \cdot \frac{\partial y^k}{\partial x_j^i}
+&amp;= \frac{\partial L}{\partial y^i} \cdot \frac{\partial y^i}{\partial x_j^i} \\
+&amp;= \frac{\partial L}{\partial y^i} \cdot \frac{\partial w_j x_j^i +b}{\partial x_j^i} \\
+&amp;= \frac{\partial L}{\partial y^i} w_j
+\end{align*}
+\]</span></p>
+<p>The matrix of derivates for all <span class="math inline">\(d\)</span> parameters (<span class="math inline">\(j \in \{1, ..., d\}\)</span>) and <span class="math inline">\(N\)</span> examples (<span class="math inline">\(i \in \{1, ..., N\}\)</span>) is:</p>
+<p><span class="math display">\[
+\frac{\partial L}{\partial X} = \begin{bmatrix}
+\frac{\partial L}{\partial y^1} w_1 &amp; \dots &amp; \frac{\partial L}{\partial y^1} w_d \\
+\frac{\partial L}{\partial y^2} w_1 &amp; \dots &amp; \frac{\partial L}{\partial y^2} w_d \\
+\vdots \\
+\frac{\partial L}{\partial y^N} w_1 &amp; \dots &amp; \frac{\partial L}{\partial y^N} w_d \\
+\end{bmatrix} = \begin{bmatrix}
+\frac{\partial L}{\partial y^1} \\
+\frac{\partial L}{\partial y^2} \\
+\vdots \\
+\frac{\partial L}{\partial y^N} \\
+\end{bmatrix}
+\begin{bmatrix}
+w_1 &amp; w_2 &amp; \dots &amp; w_d
+\end{bmatrix}
+\]</span></p>
+<p>In code: <code>inp.g = out.g @ w.T</code></p>
 </section>
 <section id="for-w" class="level4">
 <h4 class="anchored" data-anchor-id="for-w">For <span class="math inline">\(W\)</span>…</h4>
-<p>This is slightly more complicated. The weight gradient combines the mapping of the specific weights that influence each output dimension (<code>inp.T</code>) with the contribution of each output dimension to the loss (<code>out.g</code>).</p>
-<p>By the chain rule, for the <span class="math inline">\(j\)</span>th parameter of <span class="math inline">\(W\)</span>, <span class="math display">\[
+<p>Starting with a single parameter, <span class="math inline">\(w_j\)</span>:</p>
+<p><span class="math display">\[
 \begin{align*}
-\frac{\partial L}{\partial W_j} = \frac{\partial L}{\partial N} \cdot \frac{\partial N}{\partial W_j}
-= \sum_{k=1}^{||N||} \frac{\partial L}{\partial n_k} \cdot \frac{\partial n_k}{\partial W_j}
+\frac{\partial L}{\partial w_j} &amp;= \frac{\partial L}{\partial Y} \cdot \frac{\partial Y}{\partial w_j} \\
+                                &amp;= \sum_{k=1}^{N} \frac{\partial L}{\partial y^k} \cdot \frac{\partial y^k}{\partial w_j} \\
+                                &amp;= \sum_{k=1}^{N} \frac{\partial L}{\partial y^k} \cdot \frac{\partial w_j x_j^k + b_j}{\partial w_j} \\
+                                &amp;= \sum_{k=1}^{N} \frac{\partial L}{\partial y^k} x_j^k
 \end{align*}
 \]</span></p>
-<p>By the same logic where we determined that <span class="math inline">\(\frac{\partial N}{\partial X}\)</span> is <span class="math inline">\(W\)</span>, we can say that <span class="math inline">\(\frac{\partial n_k}{\partial W_j}\)</span> is <span class="math inline">\(x_j^i\)</span>. You can also think about this mathematically: what is the derivative of <span class="math inline">\(WX+b\)</span> with respect to <span class="math inline">\(W_j\)</span>? This is the <span class="math inline">\(j\)</span>th element of the <span class="math inline">\(i\)</span>th example.<span class="math display">\[
-\sum_{k=1}^{||N||} \frac{\partial L}{\partial n_k} \cdot \frac{\partial n_i}{\partial W_j} = \sum_{k=1}^{||N||} \frac{\partial L}{\partial n_k} x_j^i
-\]</span></p>
-<p>Because <span class="math inline">\(W\)</span> is a multivariate function, it’s loss Jacobian is defined like so <span class="math display">\[
+<p>For all parameters, <span class="math inline">\(W\)</span>:</p>
+<p><span class="math display">\[
 \frac{\partial L}{\partial W} = \begin{bmatrix}
-\frac{\partial L}{\partial W_{1}} \\
-\frac{\partial L}{\partial W_{2}} \\
+\frac{\partial L}{\partial w_{1}} \\
+\frac{\partial L}{\partial w_{2}} \\
 \vdots \\
-\frac{\partial L}{\partial W_{d}}
+\frac{\partial L}{\partial w_{d}}
 \end{bmatrix} = \begin{bmatrix}
-\frac{\partial L}{\partial n_1} x_1^1 &amp;+ \dots &amp;+ \frac{\partial L}{\partial n_{||N||}} x^{||N||}_1 \\
-\vdots &amp; \ddots &amp; \vdots \\
-\frac{\partial L}{\partial n_1} x_d^1 &amp;+ \dots &amp;+ \frac{\partial L}{\partial n_{||N||}} x^{||N||}_d
-\end{bmatrix}
-\]</span></p>
-<p>Factoring out all the <span class="math inline">\(x\)</span>’s from the partial derivates gives us the final expression: <span class="math display">\[
-\frac{\partial L}{\partial W} = \begin{bmatrix}
-x_1^1 &amp; \dots &amp; x^{||N||}_1 \\
-\vdots &amp; \ddots &amp; \vdots \\
-x_d^1 &amp; \dots &amp; x^{||N||}_d
-\end{bmatrix}  \begin{bmatrix}
-\frac{\partial L}{\partial n_{1}} \\
+\sum_{k=1}^{N} \frac{\partial L}{\partial y^k} x_1^k \\
+\sum_{k=1}^{N} \frac{\partial L}{\partial y^k} x_2^k \\
 \vdots \\
-\frac{\partial L}{\partial n_{||N||}} \\
-\end{bmatrix} = X^T \frac{\partial L}{\partial N}
+\sum_{k=1}^{N} \frac{\partial L}{\partial y^k} x_d^k
+\end{bmatrix}
+= \begin{bmatrix}
+\frac{\partial L}{\partial y^1} x_1^1 &amp;+ \dots &amp;+ \frac{\partial L}{\partial y^N} x_1^N \\
+\frac{\partial L}{\partial y^1} x_2^1 &amp;+ \dots &amp;+ \frac{\partial L}{\partial y^N} x_2^N \\
+\vdots &amp; \ddots &amp; \vdots \\
+\frac{\partial L}{\partial y^1} x_d^1 &amp;+ \dots &amp;+ \frac{\partial L}{\partial y^N} x_d^N \\
+\end{bmatrix} = \begin{bmatrix}
+x_1^1 &amp; \dots &amp; x^{N}_1 \\
+x_2^1 &amp; \dots &amp; x^{N}_2 \\
+\vdots &amp; \ddots &amp; \vdots \\
+x_d^1 &amp; \dots &amp; x^{N}_d
+\end{bmatrix}  \begin{bmatrix}
+\frac{\partial L}{\partial y_{1}} \\
+\frac{\partial L}{\partial y_{2}} \\
+\vdots \\
+\frac{\partial L}{\partial y_{N}} \\
+\end{bmatrix} = X^T \frac{\partial L}{\partial Y}
 \]</span></p>
-<p>More info: https://nasheqlbrm.github.io/blog/posts/2021-11-13-backward-pass.html</p>
+<p>In code: <code>w.g = inp.v.T @ out.g</code></p>
 </section>
 <section id="for-b" class="level4">
-<h4 class="anchored" data-anchor-id="for-b">For <span class="math inline">\(b\)</span>…</h4>
-<p>The gradient of the bias simply consolidates the gradients from from all the output dimensions</p>
-<div class="cell" data-execution_count="15">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lin_grad(inp, out, w, b):</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    inp.g <span class="op">=</span> out.g <span class="op">@</span> w.T</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    w.g <span class="op">=</span> inp.v.T <span class="op">@</span> out.g</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    b.g <span class="op">=</span> out.g.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<h4 class="anchored" data-anchor-id="for-b">For <span class="math inline">\(B\)</span>…</h4>
+<p><span class="math display">\[
+\begin{align*}
+\frac{\partial L}{\partial B} &amp;= \frac{\partial L}{\partial Y} \cdot \frac{\partial Y}{\partial B} \\
+                              &amp;= \sum_{k=1}^{N} \frac{\partial L}{\partial y^k} \cdot \frac{\partial y^k}{\partial B} \\
+                              &amp;= \sum_{k=1}^{N} \frac{\partial L}{\partial y^k} (1) \\
+                               &amp;= \sum_{k=1}^{N} \frac{\partial L}{\partial y^k}
+\end{align*}
+\]</span></p>
+<p>In code <code>b.g = out.g.sum(axis=0)</code></p>
+<p>You can see that these derivation are similar to their single-variable counterparts (e.g.&nbsp;<span class="math inline">\(\frac{dL}{dm} = \frac{dL}{dy} \cdot \frac{dy}{dm} = \frac{dL}{dy} \cdot \frac{dmx+b}{dm}=\frac{dL}{dy}x\)</span>). However, the <strong>order</strong> of operations and the transposition is dictated by the matrix mathematics.</p>
+<p>In code:</p>
+<div class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lin_grad(inp, out, w, b):</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    inp.g <span class="op">=</span> out.g <span class="op">@</span> w.T</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    w.g <span class="op">=</span> inp.v.T <span class="op">@</span> out.g</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    b.g <span class="op">=</span> out.g.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Much credit for my understanding goes to <a href="https://nasheqlbrm.github.io/blog/posts/2021-11-13-backward-pass.html">this blog bost.</a></p>
 </section>
 </section>
 <section id="relu" class="level3">
 <h3 class="anchored" data-anchor-id="relu">ReLU</h3>
 <p>For ReLU, we pass the upstream gradient downstream for any dimensions that contributed to the upstream signal. Note that this is an element-wise operation because the layer operates only on specific elements and has no global behavior.</p>
-<div class="cell" data-execution_count="16">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> relu_grad(inp, out):</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    inp.g <span class="op">=</span> (inp.value <span class="op">&gt;</span> <span class="dv">0</span>).astype(<span class="bu">float</span>) <span class="op">*</span> out.g</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> relu_grad(inp, out):</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    inp.g <span class="op">=</span> (inp.value <span class="op">&gt;</span> <span class="dv">0</span>).astype(<span class="bu">float</span>) <span class="op">*</span> out.g</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Putting it all together:</p>
-<div class="cell" data-execution_count="17">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># "Tensorize" the weights, biases and outputs</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>tensors <span class="op">=</span> (y_pred, W1, b1, l1, W0, b0, l0, X_trn)</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>ty_pred, tW1, tb1, tl1, tW0, tb0, tl0, tX_trn <span class="op">=</span> <span class="bu">map</span>(T, tensors)</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>mse_grad(ty_pred, y_true)</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>ty_pred.g[:<span class="dv">5</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="17">
-<pre><code>array([[ 0.00052152],
-       [-0.00058331],
-       [-0.0014717 ],
-       [-0.00073202],
-       [-0.00125473]])</code></pre>
-</div>
-</div>
 <div class="cell" data-execution_count="18">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>mse_grad(ty_pred, y_true)</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>lin_grad(tl1, ty_pred, tW1, tb1)</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>relu_grad(tl0, tl1)</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>lin_grad(tX_trn, tl0, tW0, tb0)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># "Tensorize" the weights, biases and outputs</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>tensors <span class="op">=</span> (y_pred, W1, b1, l1, W0, b0, l0, X_trn)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>ty_pred, tW1, tb1, tl1, tW0, tb0, tl0, tX_trn <span class="op">=</span> <span class="bu">map</span>(T, tensors)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>mse_grad(ty_pred, y_true)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>ty_pred.g[:<span class="dv">5</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="18">
+<pre><code>array([[-0.00049577],
+       [-0.00080577],
+       [ 0.00094763],
+       [ 0.00016918],
+       [-0.00248921]])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>mse_grad(ty_pred, y_true)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>lin_grad(tl1, ty_pred, tW1, tb1)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>relu_grad(tl0, tl1)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>lin_grad(tX_trn, tl0, tW0, tb0)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Verify with PyTorch</p>
-<div class="cell" data-execution_count="19">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Port layers</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>pt_lin0 <span class="op">=</span> nn.Linear(m, nh)</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>dtype <span class="op">=</span> pt_lin0.weight.data.dtype</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>pt_lin0.weight.data <span class="op">=</span> torch.from_numpy(tW0.v.T).to(dtype)</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>pt_lin0.bias.data <span class="op">=</span> torch.from_numpy(tb0.v).to(dtype)</span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>pt_lin1 <span class="op">=</span> nn.Linear(nh, <span class="dv">1</span>)</span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>pt_lin1.weight.data <span class="op">=</span> torch.from_numpy(tW1.T).to(dtype)</span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>pt_lin1.bias.data <span class="op">=</span> torch.from_numpy(tb1.v).to(dtype)</span>
-<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Forward pass</span></span>
-<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>logits <span class="op">=</span> pt_lin0(torch.from_numpy(X_trn).to(dtype))</span>
-<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>logits <span class="op">=</span> F.relu(logits)</span>
-<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>logits <span class="op">=</span> pt_lin1(logits)</span>
-<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> F.mse_loss(</span>
-<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>    logits.squeeze(),</span>
-<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>    torch.from_numpy(y_true).<span class="bu">float</span>(),</span>
-<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Backward pass</span></span>
-<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>loss.backward()</span>
-<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> w, b, layer <span class="kw">in</span> [</span>
-<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a>    (tW0, tb0, pt_lin0),</span>
-<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a>    (tW1, tb1, pt_lin1),</span>
-<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>]:</span>
-<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> torch.isclose(</span>
-<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>        torch.from_numpy(w.g.T).<span class="bu">float</span>(),</span>
-<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>        layer.weight.grad,</span>
-<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a>        atol<span class="op">=</span><span class="fl">1e-4</span>,</span>
-<span id="cb23-30"><a href="#cb23-30" aria-hidden="true" tabindex="-1"></a>    ).<span class="bu">all</span>()</span>
-<span id="cb23-31"><a href="#cb23-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> torch.isclose(</span>
-<span id="cb23-32"><a href="#cb23-32" aria-hidden="true" tabindex="-1"></a>        torch.from_numpy(b.g.T).<span class="bu">float</span>(),</span>
-<span id="cb23-33"><a href="#cb23-33" aria-hidden="true" tabindex="-1"></a>        layer.bias.grad,</span>
-<span id="cb23-34"><a href="#cb23-34" aria-hidden="true" tabindex="-1"></a>        atol<span class="op">=</span><span class="fl">1e-4</span>,</span>
-<span id="cb23-35"><a href="#cb23-35" aria-hidden="true" tabindex="-1"></a>    ).<span class="bu">all</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Port layers</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>pt_lin0 <span class="op">=</span> nn.Linear(m, nh)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>dtype <span class="op">=</span> pt_lin0.weight.data.dtype</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>pt_lin0.weight.data <span class="op">=</span> torch.from_numpy(tW0.v.T).to(dtype)</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>pt_lin0.bias.data <span class="op">=</span> torch.from_numpy(tb0.v).to(dtype)</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>pt_lin1 <span class="op">=</span> nn.Linear(nh, <span class="dv">1</span>)</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>pt_lin1.weight.data <span class="op">=</span> torch.from_numpy(tW1.T).to(dtype)</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>pt_lin1.bias.data <span class="op">=</span> torch.from_numpy(tb1.v).to(dtype)</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Forward pass</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>logits <span class="op">=</span> pt_lin0(torch.from_numpy(X_trn).to(dtype))</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>logits <span class="op">=</span> F.relu(logits)</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>logits <span class="op">=</span> pt_lin1(logits)</span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> F.mse_loss(</span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>    logits.squeeze(),</span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>    torch.from_numpy(y_true).<span class="bu">float</span>(),</span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Backward pass</span></span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>loss.backward()</span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> w, b, layer <span class="kw">in</span> [</span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>    (tW0, tb0, pt_lin0),</span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>    (tW1, tb1, pt_lin1),</span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a>]:</span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> torch.isclose(</span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a>        torch.from_numpy(w.g.T).<span class="bu">float</span>(),</span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a>        layer.weight.grad,</span>
+<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a>        atol<span class="op">=</span><span class="fl">1e-4</span>,</span>
+<span id="cb22-30"><a href="#cb22-30" aria-hidden="true" tabindex="-1"></a>    ).<span class="bu">all</span>()</span>
+<span id="cb22-31"><a href="#cb22-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> torch.isclose(</span>
+<span id="cb22-32"><a href="#cb22-32" aria-hidden="true" tabindex="-1"></a>        torch.from_numpy(b.g.T).<span class="bu">float</span>(),</span>
+<span id="cb22-33"><a href="#cb22-33" aria-hidden="true" tabindex="-1"></a>        layer.bias.grad,</span>
+<span id="cb22-34"><a href="#cb22-34" aria-hidden="true" tabindex="-1"></a>        atol<span class="op">=</span><span class="fl">1e-4</span>,</span>
+<span id="cb22-35"><a href="#cb22-35" aria-hidden="true" tabindex="-1"></a>    ).<span class="bu">all</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Let’s refactor these as classes.</p>
-<div class="cell" data-execution_count="20">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Module:</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, <span class="op">*</span>x):</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.inp <span class="op">=</span> x</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.out <span class="op">=</span> <span class="va">self</span>.forward(<span class="op">*</span>x)</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">isinstance</span>(<span class="va">self</span>.out, (np.ndarray,)):</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.out <span class="op">=</span> T(<span class="va">self</span>.out)</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.out</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ReLu(Module):</span>
-<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x: T):</span>
-<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> relu(x)</span>
-<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> backward(<span class="va">self</span>):</span>
-<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>        (x,) <span class="op">=</span> <span class="va">self</span>.inp</span>
-<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>        relu_grad(x, <span class="va">self</span>.out)</span>
-<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Linear(Module):</span>
-<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, h_in, h_out):</span>
-<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.W <span class="op">=</span> T(np.random.randn(h_in, h_out))</span>
-<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.b <span class="op">=</span> T(np.zeros(h_out))</span>
-<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x):</span>
-<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> T(x <span class="op">@</span> <span class="va">self</span>.W.v <span class="op">+</span> <span class="va">self</span>.b.v)</span>
-<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> backward(<span class="va">self</span>):</span>
-<span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a>        (x,) <span class="op">=</span> <span class="va">self</span>.inp</span>
-<span id="cb24-29"><a href="#cb24-29" aria-hidden="true" tabindex="-1"></a>        lin_grad(x, <span class="va">self</span>.out, <span class="va">self</span>.W, <span class="va">self</span>.b)</span>
-<span id="cb24-30"><a href="#cb24-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-31"><a href="#cb24-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-32"><a href="#cb24-32" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MSE(Module):</span>
-<span id="cb24-33"><a href="#cb24-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, y_pred, y_true):</span>
-<span id="cb24-34"><a href="#cb24-34" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> ((y_pred.squeeze() <span class="op">-</span> y_true) <span class="op">**</span> <span class="dv">2</span>).mean()</span>
-<span id="cb24-35"><a href="#cb24-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-36"><a href="#cb24-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> backward(<span class="va">self</span>):</span>
-<span id="cb24-37"><a href="#cb24-37" aria-hidden="true" tabindex="-1"></a>        y_pred, y_true <span class="op">=</span> <span class="va">self</span>.inp</span>
-<span id="cb24-38"><a href="#cb24-38" aria-hidden="true" tabindex="-1"></a>        mse_grad(y_pred, y_true)</span>
-<span id="cb24-39"><a href="#cb24-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-40"><a href="#cb24-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-41"><a href="#cb24-41" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MLP(Module):</span>
-<span id="cb24-42"><a href="#cb24-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, layers, criterion):</span>
-<span id="cb24-43"><a href="#cb24-43" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
-<span id="cb24-44"><a href="#cb24-44" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.layers <span class="op">=</span> layers</span>
-<span id="cb24-45"><a href="#cb24-45" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.criterion <span class="op">=</span> criterion</span>
-<span id="cb24-46"><a href="#cb24-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-47"><a href="#cb24-47" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x, y_pred):</span>
-<span id="cb24-48"><a href="#cb24-48" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> l <span class="kw">in</span> <span class="va">self</span>.layers:</span>
-<span id="cb24-49"><a href="#cb24-49" aria-hidden="true" tabindex="-1"></a>            x <span class="op">=</span> l(x)</span>
-<span id="cb24-50"><a href="#cb24-50" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.criterion(x, y_pred)</span>
-<span id="cb24-51"><a href="#cb24-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-52"><a href="#cb24-52" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> backward(<span class="va">self</span>):</span>
-<span id="cb24-53"><a href="#cb24-53" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.criterion.backward()</span>
-<span id="cb24-54"><a href="#cb24-54" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> l <span class="kw">in</span> <span class="bu">reversed</span>(<span class="va">self</span>.layers):</span>
-<span id="cb24-55"><a href="#cb24-55" aria-hidden="true" tabindex="-1"></a>            l.backward()</span>
-<span id="cb24-56"><a href="#cb24-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-57"><a href="#cb24-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-58"><a href="#cb24-58" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> MLP([Linear(m, nh), ReLu(), Linear(nh, <span class="dv">1</span>)], criterion<span class="op">=</span>MSE())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
 <div class="cell" data-execution_count="21">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>model(tX_trn, y_true)</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>model.backward()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Module:</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, <span class="op">*</span>x):</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.inp <span class="op">=</span> x</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.out <span class="op">=</span> <span class="va">self</span>.forward(<span class="op">*</span>x)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">isinstance</span>(<span class="va">self</span>.out, (np.ndarray,)):</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.out <span class="op">=</span> T(<span class="va">self</span>.out)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.out</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ReLu(Module):</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x: T):</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> relu(x)</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> backward(<span class="va">self</span>):</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>        (x,) <span class="op">=</span> <span class="va">self</span>.inp</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>        relu_grad(x, <span class="va">self</span>.out)</span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Linear(Module):</span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, h_in, h_out):</span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.W <span class="op">=</span> T(np.random.randn(h_in, h_out))</span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.b <span class="op">=</span> T(np.zeros(h_out))</span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x):</span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> T(x <span class="op">@</span> <span class="va">self</span>.W.v <span class="op">+</span> <span class="va">self</span>.b.v)</span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> backward(<span class="va">self</span>):</span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>        (x,) <span class="op">=</span> <span class="va">self</span>.inp</span>
+<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a>        lin_grad(x, <span class="va">self</span>.out, <span class="va">self</span>.W, <span class="va">self</span>.b)</span>
+<span id="cb23-30"><a href="#cb23-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-31"><a href="#cb23-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-32"><a href="#cb23-32" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MSE(Module):</span>
+<span id="cb23-33"><a href="#cb23-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, y_pred, y_true):</span>
+<span id="cb23-34"><a href="#cb23-34" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> ((y_pred.squeeze() <span class="op">-</span> y_true) <span class="op">**</span> <span class="dv">2</span>).mean()</span>
+<span id="cb23-35"><a href="#cb23-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-36"><a href="#cb23-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> backward(<span class="va">self</span>):</span>
+<span id="cb23-37"><a href="#cb23-37" aria-hidden="true" tabindex="-1"></a>        y_pred, y_true <span class="op">=</span> <span class="va">self</span>.inp</span>
+<span id="cb23-38"><a href="#cb23-38" aria-hidden="true" tabindex="-1"></a>        mse_grad(y_pred, y_true)</span>
+<span id="cb23-39"><a href="#cb23-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-40"><a href="#cb23-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-41"><a href="#cb23-41" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MLP(Module):</span>
+<span id="cb23-42"><a href="#cb23-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, layers, criterion):</span>
+<span id="cb23-43"><a href="#cb23-43" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb23-44"><a href="#cb23-44" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.layers <span class="op">=</span> layers</span>
+<span id="cb23-45"><a href="#cb23-45" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.criterion <span class="op">=</span> criterion</span>
+<span id="cb23-46"><a href="#cb23-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-47"><a href="#cb23-47" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x, y_pred):</span>
+<span id="cb23-48"><a href="#cb23-48" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> l <span class="kw">in</span> <span class="va">self</span>.layers:</span>
+<span id="cb23-49"><a href="#cb23-49" aria-hidden="true" tabindex="-1"></a>            x <span class="op">=</span> l(x)</span>
+<span id="cb23-50"><a href="#cb23-50" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.criterion(x, y_pred)</span>
+<span id="cb23-51"><a href="#cb23-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-52"><a href="#cb23-52" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> backward(<span class="va">self</span>):</span>
+<span id="cb23-53"><a href="#cb23-53" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.criterion.backward()</span>
+<span id="cb23-54"><a href="#cb23-54" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> l <span class="kw">in</span> <span class="bu">reversed</span>(<span class="va">self</span>.layers):</span>
+<span id="cb23-55"><a href="#cb23-55" aria-hidden="true" tabindex="-1"></a>            l.backward()</span>
+<span id="cb23-56"><a href="#cb23-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-57"><a href="#cb23-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-58"><a href="#cb23-58" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> MLP([Linear(m, nh), ReLu(), Linear(nh, <span class="dv">1</span>)], criterion<span class="op">=</span>MSE())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>model(tX_trn, y_true)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>model.backward()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>This is quite a bit cleaner!</p>
 <p>By the rules of FastAI, we can now use the <code>torch.nn.Module</code> classes which is the equivalent in PyTorch.</p>

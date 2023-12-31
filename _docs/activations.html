@@ -250,8 +250,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#set_seed" id="toc-set_seed" class="nav-link active" data-scroll-target="#set_seed">set_seed</a></li>
   <li><a href="#baseline" id="toc-baseline" class="nav-link" data-scroll-target="#baseline">Baseline</a>
   <ul>
-  <li><a href="#cnn" id="toc-cnn" class="nav-link" data-scroll-target="#cnn">CNN</a></li>
   <li><a href="#conv2dwithrelu" id="toc-conv2dwithrelu" class="nav-link" data-scroll-target="#conv2dwithrelu">Conv2dWithReLU</a></li>
+  <li><a href="#cnn" id="toc-cnn" class="nav-link" data-scroll-target="#cnn">CNN</a></li>
   </ul></li>
   <li><a href="#hooks" id="toc-hooks" class="nav-link" data-scroll-target="#hooks">Hooks</a>
   <ul>
@@ -310,33 +310,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="baseline">Baseline</h2>
 <p>Let’s look at a fashion MNIST classification problem.</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/activations.py#L48" target="_blank" style="float:right; font-size:smaller">source</a></p>
-<section id="cnn" class="level3">
-<h3 class="anchored" data-anchor-id="cnn">CNN</h3>
-<blockquote class="blockquote">
-<pre><code> CNN ()</code></pre>
-</blockquote>
-<p>Base class for all neural network modules.</p>
-<p>Your models should also subclass this class.</p>
-<p>Modules can also contain other Modules, allowing to nest them in a tree structure. You can assign the submodules as regular attributes::</p>
-<pre><code>import torch.nn as nn
-import torch.nn.functional as F
-
-class Model(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv1 = nn.Conv2d(1, 20, 5)
-        self.conv2 = nn.Conv2d(20, 20, 5)
-
-    def forward(self, x):
-        x = F.relu(self.conv1(x))
-        return F.relu(self.conv2(x))</code></pre>
-<p>Submodules assigned in this way will be registered, and will have their parameters converted too when you call :meth:<code>to</code>, etc.</p>
-<p>.. note:: As per the example above, an <code>__init__()</code> call to the parent class must be made before assignment on the child.</p>
-<p>:ivar training: Boolean represents whether this module is in training or evaluation mode. :vartype training: bool</p>
-<hr>
 <p><a href="https://github.com/jeremy/slowai/blob/main/slowai/activations.py#L38" target="_blank" style="float:right; font-size:smaller">source</a></p>
-</section>
 <section id="conv2dwithrelu" class="level3">
 <h3 class="anchored" data-anchor-id="conv2dwithrelu">Conv2dWithReLU</h3>
 <blockquote class="blockquote">
@@ -346,45 +320,37 @@ class Model(nn.Module):
                  bias:bool=True, padding_mode:str='zeros', device=None,
                  dtype=None)</code></pre>
 </blockquote>
-<p>Base class for all neural network modules.</p>
-<p>Your models should also subclass this class.</p>
-<p>Modules can also contain other Modules, allowing to nest them in a tree structure. You can assign the submodules as regular attributes::</p>
-<pre><code>import torch.nn as nn
-import torch.nn.functional as F
-
-class Model(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv1 = nn.Conv2d(1, 20, 5)
-        self.conv2 = nn.Conv2d(20, 20, 5)
-
-    def forward(self, x):
-        x = F.relu(self.conv1(x))
-        return F.relu(self.conv2(x))</code></pre>
-<p>Submodules assigned in this way will be registered, and will have their parameters converted too when you call :meth:<code>to</code>, etc.</p>
-<p>.. note:: As per the example above, an <code>__init__()</code> call to the parent class must be made before assignment on the child.</p>
-<p>:ivar training: Boolean represents whether this module is in training or evaluation mode. :vartype training: bool</p>
+<p>Convolutional neural network with a built in activation</p>
+<hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/activations.py#L48" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="cnn" class="level3">
+<h3 class="anchored" data-anchor-id="cnn">CNN</h3>
+<blockquote class="blockquote">
+<pre><code> CNN ()</code></pre>
+</blockquote>
+<p>Six layer convolutional neural network</p>
 <p>Generally, we want a high learning rate to come up with generalizable algorithms. Let’s start with the relatively high 0.6.</p>
 <div class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train(model, extra_cbs<span class="op">=</span><span class="va">None</span>):</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    cbs <span class="op">=</span> [</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        MetricsCB(MulticlassAccuracy(num_classes<span class="op">=</span><span class="dv">10</span>)),</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>        DeviceCB(),</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        ProgressCB(plot<span class="op">=</span><span class="va">True</span>),</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    ]</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> extra_cbs:</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        cbs.extend(extra_cbs)</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    learn <span class="op">=</span> TrainLearner(</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        model,</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        fashion_mnist(),</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        F.cross_entropy,</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        lr<span class="op">=</span><span class="fl">0.6</span>,</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        cbs<span class="op">=</span>cbs,</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    ).fit()</span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> learn</span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>train(model<span class="op">=</span>CNN())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train(model, extra_cbs<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    cbs <span class="op">=</span> [</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        MetricsCB(MulticlassAccuracy(num_classes<span class="op">=</span><span class="dv">10</span>)),</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        DeviceCB(),</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        ProgressCB(plot<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> extra_cbs:</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        cbs.extend(extra_cbs)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    learn <span class="op">=</span> TrainLearner(</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        model,</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        fashion_mnist(),</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        F.cross_entropy,</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        lr<span class="op">=</span><span class="fl">0.6</span>,</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        cbs<span class="op">=</span>cbs,</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    ).fit()</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> learn</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>train(model<span class="op">=</span>CNN())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 
 <style>
@@ -438,7 +404,7 @@ class Model(nn.Module):
 </section>
 <section id="hooks" class="level2">
 <h2 class="anchored" data-anchor-id="hooks">Hooks</h2>
-<p>Jeremy’s implementation is kind of a mess so I did a bit of refactoring. Hooks are just another kind of callback, so we can adopt our <a href="https://jeremy.github.io/slowai/learner.html#callback"><code>Callback</code></a> conventions.</p>
+<p>Jeremy’s implementation is kind of a mess so I did a bit of refactoring. Hooks are just another kind of callback in the PyTorch universe, so we can adopt our <a href="https://jeremy.github.io/slowai/learner.html#callback"><code>Callback</code></a> conventions.</p>
 <hr>
 <p><a href="https://github.com/jeremy/slowai/blob/main/slowai/activations.py#L63" target="_blank" style="float:right; font-size:smaller">source</a></p>
 <section id="hook" class="level3">
@@ -446,17 +412,17 @@ class Model(nn.Module):
 <blockquote class="blockquote">
 <pre><code> Hook (m, f)</code></pre>
 </blockquote>
-<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<p>Wrapper for a PyTorch hook, facilitating adding instance state</p>
 <hr>
 <p><a href="https://github.com/jeremy/slowai/blob/main/slowai/activations.py#L74" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="hookscallback" class="level3">
 <h3 class="anchored" data-anchor-id="hookscallback">HooksCallback</h3>
 <blockquote class="blockquote">
-<pre><code> HooksCallback (hook_cls, mods=None, mod_filter=&lt;function noop&gt;,
+<pre><code> HooksCallback (hook_f, mods=None, mod_filter=&lt;function noop&gt;,
                 on_train=True, on_valid=False)</code></pre>
 </blockquote>
-<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<p>Container for hooks with clean up and and options to target certain modules</p>
 <p>That being implemented, we can subclass these for adding hook behaviors.</p>
 <hr>
 <p><a href="https://github.com/jeremy/slowai/blob/main/slowai/activations.py#L103" target="_blank" style="float:right; font-size:smaller">source</a></p>
@@ -466,7 +432,7 @@ class Model(nn.Module):
 <blockquote class="blockquote">
 <pre><code> StoreModuleStats (m, on_train=True, on_valid=False)</code></pre>
 </blockquote>
-<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<p>A hook for storing the activation statistics</p>
 <hr>
 <p><a href="https://github.com/jeremy/slowai/blob/main/slowai/activations.py#L126" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
@@ -476,14 +442,14 @@ class Model(nn.Module):
 <pre><code> StoreModuleStatsCB (mods=None, mod_filter=&lt;function noop&gt;, on_train=True,
                      on_valid=False)</code></pre>
 </blockquote>
-<p>Initialize self. See help(type(self)) for accurate signature.</p>
+<p>Callback for plotting the layer-wise activation statistics</p>
 <p>Now, we can rerun while keeping track of the activation stats</p>
 <div class="cell" data-execution_count="11">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> CNN()</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>train(</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    model<span class="op">=</span>model,</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    extra_cbs<span class="op">=</span>[StoreModuleStatsCB(mods<span class="op">=</span>model.layers)],</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> CNN()</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>train(</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    model<span class="op">=</span>model,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    extra_cbs<span class="op">=</span>[StoreModuleStatsCB(mods<span class="op">=</span>model.layers)],</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 
 <style>
@@ -539,7 +505,7 @@ class Model(nn.Module):
 </div>
 </div>
 <p>Jeremy makes the point that his network isn’t training because the weights are close to 0, which makes them “dead units.”</p>
-<p>Generally, the mean should be 0 and the standard deviation should be close to 1.</p>
+<p>⚠️ Generally, the mean should be 0 and the standard deviation should be close to 1.</p>
 <p>Ultimately, Jeremy recommends simply abandoning any training run where the activation variance increases and crashes.</p>
 
 
