@@ -4,10 +4,9 @@
 __all__ = []
 
 # %% ../nbs/04_minibatch_training.ipynb 3
+import fastcore.all as fc
 import torch
 import torch.nn.functional as F
 from einops import rearrange
-import fastcore.all as fc
-
 
 from .calculus import MNISTDataModule
