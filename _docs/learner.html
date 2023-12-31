@@ -330,7 +330,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <blockquote class="blockquote">
 <pre><code> DataLoaders (splits, nworkers:int=0, bs=32, collate_fn=&lt;function
               default_collate&gt;, tdir=&lt;TemporaryDirectory
-              '/tmp/tmp_0iyau6q'&gt;)</code></pre>
+              '/tmp/tmp64cxf2xz'&gt;)</code></pre>
 </blockquote>
 <p>Wrapper around huggingface datasets to facilitate raw pytorch work</p>
 <div class="cell" data-execution_count="4">
@@ -524,7 +524,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="devicecb" class="level3">
 <h3 class="anchored" data-anchor-id="devicecb">DeviceCB</h3>
 <blockquote class="blockquote">
-<pre><code> DeviceCB (device='cuda')</code></pre>
+<pre><code> DeviceCB (device='cpu')</code></pre>
 </blockquote>
 <p>Move tensors and model to the CPU/GPU/etc</p>
 <hr>
@@ -732,6 +732,7 @@ Wall time: 23 s</code></pre>
 </div>
 <p>Can we improve the reconstruction? Let’s implement a simple momentum.</p>
 <hr>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L418" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="momentumcb" class="level3">
 <h3 class="anchored" data-anchor-id="momentumcb">MomentumCB</h3>
@@ -866,7 +867,7 @@ Wall time: 22.7 s</code></pre>
 </tbody>
 </table>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L418" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L428" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="lrfindercb" class="level3">
 <h3 class="anchored" data-anchor-id="lrfindercb">LRFinderCB</h3>

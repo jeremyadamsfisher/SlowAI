@@ -1,59 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://jeremy.github.io/slowai/autoencoders.html</loc>
-    <lastmod>2023-12-31T21:09:36.325Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jeremy.github.io/slowai/clustering.html</loc>
-    <lastmod>2023-12-31T21:09:35.589Z</lastmod>
+    <loc>https://jeremy.github.io/slowai/diving_deeper_homework.html</loc>
+    <lastmod>2023-12-31T21:17:33.114Z</lastmod>
   </url>
   <url>
     <loc>https://jeremy.github.io/slowai/minibatch_training.html</loc>
-    <lastmod>2023-12-31T21:09:34.761Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jeremy.github.io/slowai/index.html</loc>
-    <lastmod>2023-12-31T21:09:33.825Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jeremy.github.io/slowai/diving_deeper.html</loc>
-    <lastmod>2023-12-31T21:09:32.393Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jeremy.github.io/slowai/diving_deeper_homework.html</loc>
-    <lastmod>2023-12-31T21:09:31.185Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jeremy.github.io/slowai/utils.html</loc>
-    <lastmod>2023-12-31T21:09:30.413Z</lastmod>
+    <lastmod>2023-12-31T21:17:32.350Z</lastmod>
   </url>
   <url>
     <loc>https://jeremy.github.io/slowai/datasets.html</loc>
-    <lastmod>2023-12-31T21:09:30.157Z</lastmod>
+    <lastmod>2023-12-31T21:17:31.630Z</lastmod>
   </url>
   <url>
     <loc>https://jeremy.github.io/slowai/activations.html</loc>
-    <lastmod>2023-12-31T21:09:30.789Z</lastmod>
+    <lastmod>2023-12-31T21:17:30.206Z</lastmod>
   </url>
   <url>
     <loc>https://jeremy.github.io/slowai/overview.html</loc>
-    <lastmod>2023-12-31T21:09:31.889Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jeremy.github.io/slowai/initializations.html</loc>
-    <lastmod>2023-12-31T21:09:33.349Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jeremy.github.io/slowai/learner.html</loc>
-    <lastmod>2023-12-31T21:09:34.381Z</lastmod>
+    <lastmod>2023-12-31T21:17:29.390Z</lastmod>
   </url>
   <url>
     <loc>https://jeremy.github.io/slowai/convs.html</loc>
-    <lastmod>2023-12-31T21:09:35.133Z</lastmod>
+    <lastmod>2023-12-31T21:17:28.126Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jeremy.github.io/slowai/initializations.html</loc>
+    <lastmod>2023-12-31T21:17:27.186Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jeremy.github.io/slowai/utils.html</loc>
+    <lastmod>2023-12-31T21:17:25.878Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jeremy.github.io/slowai/diving_deeper.html</loc>
+    <lastmod>2023-12-31T21:17:27.722Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jeremy.github.io/slowai/learner.html</loc>
+    <lastmod>2023-12-31T21:17:28.694Z</lastmod>
   </url>
   <url>
     <loc>https://jeremy.github.io/slowai/calculus.html</loc>
-    <lastmod>2023-12-31T21:09:36.049Z</lastmod>
+    <lastmod>2023-12-31T21:17:29.858Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jeremy.github.io/slowai/clustering.html</loc>
+    <lastmod>2023-12-31T21:17:30.682Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jeremy.github.io/slowai/autoencoders.html</loc>
+    <lastmod>2023-12-31T21:17:31.950Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jeremy.github.io/slowai/index.html</loc>
+    <lastmod>2023-12-31T21:17:32.770Z</lastmod>
   </url>
 </urlset>
