@@ -36,6 +36,8 @@ def set_seed(seed, deterministic=False):
 
 # %% ../nbs/09_activations.ipynb 7
 class Conv2dWithReLU(nn.Module):
+    """Convolutional neural network with a built in activation"""
+
     @fc.delegates(nn.Conv2d)
     def __init__(self, *args, **kwargs):
         super().__init__()
@@ -44,8 +46,10 @@ class Conv2dWithReLU(nn.Module):
     def forward(self, x):
         return F.relu(self.conv(x))
 
-
+# %% ../nbs/09_activations.ipynb 8
 class CNN(nn.Module):
+    """Six layer convolutional neural network"""
+
     def __init__(self):
         super().__init__()
         self.layers = nn.Sequential(
@@ -59,8 +63,10 @@ class CNN(nn.Module):
     def forward(self, x):
         return rearrange(self.layers(x), "bs c w h -> bs (c w h)")
 
-# %% ../nbs/09_activations.ipynb 11
+# %% ../nbs/09_activations.ipynb 12
 class Hook:
+    """Wrapper for a PyTorch hook, facilitating adding instance state"""
+
     def __init__(self, m, f):
         self.hook = m.register_forward_hook(partial(f, self))
 
@@ -70,11 +76,13 @@ class Hook:
     def __del__(self):
         self.remove()
 
-# %% ../nbs/09_activations.ipynb 12
+# %% ../nbs/09_activations.ipynb 13
 class HooksCallback(Callback):
+    """Container for hooks with clean up and and options to target certain modules"""
+
     def __init__(
         self,
-        hook_cls,
+        hook_f,
         mods=None,
         mod_filter=fc.noop,
         on_train=True,
@@ -99,8 +107,10 @@ class HooksCallback(Callback):
     def __len__(self):
         return len(self.hooks)
 
-# %% ../nbs/09_activations.ipynb 14
+# %% ../nbs/09_activations.ipynb 15
 class StoreModuleStats(Hook):
+    """A hook for storing the activation statistics"""
+
     def __init__(self, m, on_train=True, on_valid=False):
         self.moments = []
         self.hists = []
@@ -122,8 +132,10 @@ class StoreModuleStats(Hook):
         ax0.plot(means, label=label)
         ax1.plot(stds)
 
-# %% ../nbs/09_activations.ipynb 15
+# %% ../nbs/09_activations.ipynb 16
 class StoreModuleStatsCB(HooksCallback):
+    """Callback for plotting the layer-wise activation statistics"""
+
     def __init__(
         self,
         mods=None,
@@ -134,15 +146,19 @@ class StoreModuleStatsCB(HooksCallback):
         fc.store_attr()
         self.hook_cls = StoreModuleStats
 
-    def after_fit(self, learn):
+    def hist_plot(self):
         fig, axes = get_grid(len(self.hooks))
         for ax, h in zip(axes.flatten(), self.hooks):
             hist = torch.stack(h.hists).T.float().log1p()
             show_image(hist, ax, origin="lower")
-        fig, axes = plt.subplots(1, 2, figsize=(10, 4))
         fig.tight_layout()
+
+    def mean_std_plot(self):
+        fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+        ax0, ax1 = axes
+        ax0.set(title="Mean")
+        ax1.set(title="STD")
         for i, h in enumerate(self.hooks):
-            layer = learn.model.layers[i]
-            h.plot(*axes, label=f"layer {i}: {type(layer)}")
+            h.plot(*axes, label=f"layer {i}")
         fig.legend()
         fig.tight_layout()

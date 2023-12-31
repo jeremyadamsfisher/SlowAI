@@ -4,6 +4,7 @@
 __all__ = []
 
 # %% ../nbs/10_initializations.ipynb 3
+import math
 import random
 from contextlib import contextmanager
 from functools import partial
@@ -15,13 +16,15 @@ import torch
 import torch.nn.functional as F
 from einops import rearrange
 from torch import Tensor, nn
+from torch.nn import init
 from torchmetrics.classification import MulticlassAccuracy
 
-from .activations import set_seed
+from .activations import Conv2dWithReLU, StoreModuleStatsCB, set_seed
 from .datasets import get_grid, show_image
 from slowai.learner import (
     Callback,
     DeviceCB,
+    LRFinderCB,
     MetricsCB,
     ProgressCB,
     TrainLearner,

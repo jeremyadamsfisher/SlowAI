@@ -389,12 +389,14 @@ def to_cpu(x):
     return res.float() if res.dtype == torch.float16 else res
 
 # %% ../nbs/08_learner.ipynb 31
-def fashion_mnist():
+def fashion_mnist(bs=2048):
     """Helper to use fashion MNIST"""
-    return tensorize_images(DataLoaders.from_hf("fashion_mnist", bs=2048)).listify()
+    return tensorize_images(DataLoaders.from_hf("fashion_mnist", bs=bs)).listify()
 
 # %% ../nbs/08_learner.ipynb 37
 class TrainLearner(Learner):
+    """Sane training loop"""
+
     def predict(self):
         xb, yb = self.batch
         self.preds = self.model(xb)
