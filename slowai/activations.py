@@ -39,12 +39,18 @@ class Conv2dWithReLU(nn.Module):
     """Convolutional neural network with a built in activation"""
 
     @fc.delegates(nn.Conv2d)
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        *args,
+        nonlinearity=F.relu,
+        **kwargs,
+    ):
         super().__init__()
         self.conv = nn.Conv2d(*args, **kwargs)
+        self.nonlinearity = nonlinearity
 
     def forward(self, x):
-        return F.relu(self.conv(x))
+        return self.nonlinearity(self.conv(x))
 
 # %% ../nbs/09_activations.ipynb 8
 class CNN(nn.Module):

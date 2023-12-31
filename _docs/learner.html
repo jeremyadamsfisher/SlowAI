@@ -173,6 +173,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./utils.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Utilities</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./diving_deeper.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Diving Deeper</span></a>
   </div>
@@ -269,6 +275,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#to_cpu" id="toc-to_cpu" class="nav-link" data-scroll-target="#to_cpu">to_cpu</a></li>
   <li><a href="#fashion_mnist" id="toc-fashion_mnist" class="nav-link" data-scroll-target="#fashion_mnist">fashion_mnist</a></li>
   <li><a href="#trainlearner" id="toc-trainlearner" class="nav-link" data-scroll-target="#trainlearner">TrainLearner</a></li>
+  <li><a href="#momentumcb" id="toc-momentumcb" class="nav-link" data-scroll-target="#momentumcb">MomentumCB</a></li>
   <li><a href="#show_doc" id="toc-show_doc" class="nav-link" data-scroll-target="#show_doc">show_doc</a></li>
   <li><a href="#lrfindercb" id="toc-lrfindercb" class="nav-link" data-scroll-target="#lrfindercb">LRFinderCB</a></li>
   </ul></li>
@@ -323,7 +330,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <blockquote class="blockquote">
 <pre><code> DataLoaders (splits, nworkers:int=0, bs=32, collate_fn=&lt;function
               default_collate&gt;, tdir=&lt;TemporaryDirectory
-              '/tmp/tmprf8dt6h0'&gt;)</code></pre>
+              '/tmp/tmp_0iyau6q'&gt;)</code></pre>
 </blockquote>
 <p>Wrapper around huggingface datasets to facilitate raw pytorch work</p>
 <div class="cell" data-execution_count="4">
@@ -517,7 +524,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="devicecb" class="level3">
 <h3 class="anchored" data-anchor-id="devicecb">DeviceCB</h3>
 <blockquote class="blockquote">
-<pre><code> DeviceCB (device='cpu')</code></pre>
+<pre><code> DeviceCB (device='cuda')</code></pre>
 </blockquote>
 <p>Move tensors and model to the CPU/GPU/etc</p>
 <hr>
@@ -534,7 +541,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="fashion_mnist" class="level3">
 <h3 class="anchored" data-anchor-id="fashion_mnist">fashion_mnist</h3>
 <blockquote class="blockquote">
-<pre><code> fashion_mnist ()</code></pre>
+<pre><code> fashion_mnist (bs=2048)</code></pre>
 </blockquote>
 <p>Helper to use fashion MNIST</p>
 <p>Putting it all together</p>
@@ -724,27 +731,25 @@ Wall time: 23 s</code></pre>
 </div>
 </div>
 <p>Can we improve the reconstruction? Let’s implement a simple momentum.</p>
+<hr>
+</section>
+<section id="momentumcb" class="level3">
+<h3 class="anchored" data-anchor-id="momentumcb">MomentumCB</h3>
+<blockquote class="blockquote">
+<pre><code> MomentumCB (momentum=0.85)</code></pre>
+</blockquote>
+<p>Modify the training behavior</p>
 <div class="cell" data-execution_count="24">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MomentumCB(Callback):</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, momentum<span class="op">=</span><span class="fl">0.85</span>):</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.momentum <span class="op">=</span> momentum</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> zero_grad(<span class="va">self</span>, learn):</span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">with</span> torch.no_grad():</span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> p <span class="kw">in</span> learn.model.parameters():</span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>                p.grad <span class="op">*=</span> <span class="va">self</span>.momentum</span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>cbs <span class="op">=</span> [MetricsCB(), DeviceCB(), ProgressCB(plot<span class="op">=</span><span class="va">True</span>), MomentumCB()]</span>
-<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> AutoencoderTrainer(</span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>    get_ae_model(),</span>
-<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>    dls,</span>
-<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>    F.mse_loss,</span>
-<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>    lr<span class="op">=</span><span class="fl">0.01</span>,</span>
-<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>    cbs<span class="op">=</span>cbs,</span>
-<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>    opt_func<span class="op">=</span>torch.optim.AdamW,</span>
-<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>).fit(<span class="dv">2</span>)</span>
-<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>viz(model, xbt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>cbs <span class="op">=</span> [MetricsCB(), DeviceCB(), ProgressCB(plot<span class="op">=</span><span class="va">True</span>), MomentumCB()]</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> AutoencoderTrainer(</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    get_ae_model(),</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    dls,</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    F.mse_loss,</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    lr<span class="op">=</span><span class="fl">0.01</span>,</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    cbs<span class="op">=</span>cbs,</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>    opt_func<span class="op">=</span>torch.optim.AdamW,</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>).fit(<span class="dv">2</span>)</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>viz(model, xbt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 
 <style>
@@ -797,14 +802,14 @@ Wall time: 23 s</code></pre>
 </table>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="08_learner_files/figure-html/cell-28-output-3.png" class="img-fluid"></p>
+<p><img src="08_learner_files/figure-html/cell-29-output-3.png" class="img-fluid"></p>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>CPU times: user 22.6 s, sys: 91.6 ms, total: 22.7 s
 Wall time: 22.7 s</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="08_learner_files/figure-html/cell-28-output-5.png" class="img-fluid"></p>
+<p><img src="08_learner_files/figure-html/cell-29-output-5.png" class="img-fluid"></p>
 </div>
 </div>
 <p>Not especially impressive.</p>
@@ -861,7 +866,7 @@ Wall time: 22.7 s</code></pre>
 </tbody>
 </table>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L416" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L418" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="lrfindercb" class="level3">
 <h3 class="anchored" data-anchor-id="lrfindercb">LRFinderCB</h3>
@@ -870,14 +875,14 @@ Wall time: 22.7 s</code></pre>
 </blockquote>
 <p>Find an apopriate learning rate by increasing it by a constant factor for each batch until the loss diverges</p>
 <div class="cell" data-execution_count="26">
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> AutoencoderTrainer(</span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    get_ae_model(),</span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    dls,</span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    F.mse_loss,</span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    lr<span class="op">=</span><span class="fl">1e-5</span>,</span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    cbs<span class="op">=</span>cbs,</span>
-<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>    opt_func<span class="op">=</span>torch.optim.AdamW,</span>
-<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>).lr_find()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> AutoencoderTrainer(</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    get_ae_model(),</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    dls,</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    F.mse_loss,</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    lr<span class="op">=</span><span class="fl">1e-5</span>,</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>    cbs<span class="op">=</span>cbs,</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    opt_func<span class="op">=</span>torch.optim.AdamW,</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>).lr_find()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 
 <style>
@@ -938,21 +943,21 @@ Wall time: 22.7 s</code></pre>
   warnings.warn(*args, **kwargs)  # noqa: B028</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="08_learner_files/figure-html/cell-31-output-4.png" class="img-fluid"></p>
+<p><img src="08_learner_files/figure-html/cell-32-output-4.png" class="img-fluid"></p>
 </div>
 </div>
 <p>It looks like 1e-2 is a good learning rate.</p>
 <div class="cell" data-execution_count="27">
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>cbs <span class="op">=</span> [MetricsCB(), DeviceCB(), ProgressCB(plot<span class="op">=</span><span class="va">True</span>), MomentumCB()]</span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> AutoencoderTrainer(</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    get_ae_model(),</span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    dls,</span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    F.mse_loss,</span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>    lr<span class="op">=</span><span class="fl">1e-2</span>,</span>
-<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>    cbs<span class="op">=</span>cbs,</span>
-<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    opt_func<span class="op">=</span>torch.optim.AdamW,</span>
-<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>).fit(<span class="dv">2</span>)</span>
-<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>viz(model, xbt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>cbs <span class="op">=</span> [MetricsCB(), DeviceCB(), ProgressCB(plot<span class="op">=</span><span class="va">True</span>), MomentumCB()]</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>learn <span class="op">=</span> AutoencoderTrainer(</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    get_ae_model(),</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    dls,</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    F.mse_loss,</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>    lr<span class="op">=</span><span class="fl">1e-2</span>,</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>    cbs<span class="op">=</span>cbs,</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>    opt_func<span class="op">=</span>torch.optim.AdamW,</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>).fit(<span class="dv">2</span>)</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>viz(model, xbt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 
 <style>
@@ -1005,10 +1010,10 @@ Wall time: 22.7 s</code></pre>
 </table>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="08_learner_files/figure-html/cell-32-output-3.png" class="img-fluid"></p>
+<p><img src="08_learner_files/figure-html/cell-33-output-3.png" class="img-fluid"></p>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="08_learner_files/figure-html/cell-32-output-4.png" class="img-fluid"></p>
+<p><img src="08_learner_files/figure-html/cell-33-output-4.png" class="img-fluid"></p>
 </div>
 </div>
 <p>Again, not especially impressive.</p>

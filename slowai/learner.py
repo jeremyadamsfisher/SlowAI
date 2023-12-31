@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['pipe', 'to_tensor', 'DataLoaders', 'batchify', 'tensorize_images', 'CancelFitException', 'CancelBatchException',
            'CancelEpochException', 'Callback', 'with_cbs', 'Learner', 'TrainCB', 'MetricsCB', 'DeviceCB', 'after',
-           'ProgressCB', 'to_cpu', 'fashion_mnist', 'TrainLearner', 'LRFinderCB', 'lr_find']
+           'ProgressCB', 'to_cpu', 'fashion_mnist', 'TrainLearner', 'MomentumCB', 'LRFinderCB', 'lr_find']
 
 # %% ../nbs/08_learner.ipynb 3
 import math
@@ -414,7 +414,17 @@ class TrainLearner(Learner):
     def zero_grad(self):
         self.opt.zero_grad()
 
-# %% ../nbs/08_learner.ipynb 43
+# %% ../nbs/08_learner.ipynb 41
+class MomentumCB(Callback):
+    def __init__(self, momentum=0.85):
+        self.momentum = momentum
+
+    def zero_grad(self, learn):
+        with torch.no_grad():
+            for p in learn.model.parameters():
+                p.grad *= self.momentum
+
+# %% ../nbs/08_learner.ipynb 44
 class LRFinderCB(Callback):
     """Find an apopriate learning rate by increasing it by a constant factor for each batch
     until the loss diverges"""

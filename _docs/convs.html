@@ -170,6 +170,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./utils.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Utilities</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./diving_deeper.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Diving Deeper</span></a>
   </div>
@@ -430,7 +436,7 @@ See :class:`torch.nn.Unfold` for details
 <section id="to_device" class="level3">
 <h3 class="anchored" data-anchor-id="to_device">to_device</h3>
 <blockquote class="blockquote">
-<pre><code> to_device (x, device='cpu')</code></pre>
+<pre><code> to_device (x, device='cuda')</code></pre>
 </blockquote>
 <p>Now, define the model…</p>
 <p>Note here that the default stride is <code>2</code>, such that the feature map is downsampled by 2 each layer.</p>
@@ -469,7 +475,7 @@ See :class:`torch.nn.Unfold` for details
 <pre><code> accuracy (y, y_pred)</code></pre>
 </blockquote>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L392" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/learner.py#L361" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="fashion_mnist" class="level3">
 <h3 class="anchored" data-anchor-id="fashion_mnist">fashion_mnist</h3>

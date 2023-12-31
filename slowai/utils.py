@@ -5,33 +5,10 @@ __all__ = ['clean_ipython_hist', 'clean_tb', 'clean_mem']
 
 # %% ../nbs/00_utils.ipynb 2
 import gc
-import gzip
-import math
-import os
-import pickle
-import shutil
 import sys
-import time
 import traceback
-from collections.abc import Mapping
-from contextlib import contextmanager
-from copy import copy
-from functools import partial
-from operator import attrgetter, itemgetter
-from pathlib import Path
 
-import fastcore.all as fc
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import numpy as np
 import torch
-import torch.nn.functional as F
-import torchvision.transforms.functional as TF
-from datasets import load_dataset, load_dataset_builder
-from torch import nn, optim, tensor
-from torch.nn import init
-from torch.utils.data import DataLoader, default_collate
-from torcheval.metrics import MulticlassAccuracy
 
 # %% ../nbs/00_utils.ipynb 3
 def clean_ipython_hist():

@@ -173,6 +173,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./utils.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Utilities</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./diving_deeper.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Diving Deeper</span></a>
   </div>
@@ -314,7 +320,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="conv2dwithrelu" class="level3">
 <h3 class="anchored" data-anchor-id="conv2dwithrelu">Conv2dWithReLU</h3>
 <blockquote class="blockquote">
-<pre><code> Conv2dWithReLU (*args, stride:Union[int,Tuple[int,int]]=1,
+<pre><code> Conv2dWithReLU (*args, nonlinearity=&lt;function relu&gt;,
+                 stride:Union[int,Tuple[int,int]]=1,
                  padding:Union[str,int,Tuple[int,int]]=0,
                  dilation:Union[int,Tuple[int,int]]=1, groups:int=1,
                  bias:bool=True, padding_mode:str='zeros', device=None,
@@ -322,7 +329,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </blockquote>
 <p>Convolutional neural network with a built in activation</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/activations.py#L48" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/activations.py#L56" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="cnn" class="level3">
 <h3 class="anchored" data-anchor-id="cnn">CNN</h3>
@@ -331,7 +338,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </blockquote>
 <p>Six layer convolutional neural network</p>
 <p>Generally, we want a high learning rate to come up with generalizable algorithms. Let’s start with the relatively high 0.6.</p>
-<div class="cell" data-execution_count="6">
+<div class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train(model, extra_cbs<span class="op">=</span><span class="va">None</span>):</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    cbs <span class="op">=</span> [</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        MetricsCB(MulticlassAccuracy(num_classes<span class="op">=</span><span class="dv">10</span>)),</span>
@@ -381,7 +388,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>0.160</td>
+<td>0.161</td>
 <td>2.911</td>
 <td>0</td>
 <td>train</td>
@@ -406,7 +413,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="hooks">Hooks</h2>
 <p>Jeremy’s implementation is kind of a mess so I did a bit of refactoring. Hooks are just another kind of callback in the PyTorch universe, so we can adopt our <a href="https://jeremy.github.io/slowai/learner.html#callback"><code>Callback</code></a> conventions.</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/activations.py#L63" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/activations.py#L73" target="_blank" style="float:right; font-size:smaller">source</a></p>
 <section id="hook" class="level3">
 <h3 class="anchored" data-anchor-id="hook">Hook</h3>
 <blockquote class="blockquote">
@@ -414,7 +421,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </blockquote>
 <p>Wrapper for a PyTorch hook, facilitating adding instance state</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/activations.py#L74" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/activations.py#L86" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="hookscallback" class="level3">
 <h3 class="anchored" data-anchor-id="hookscallback">HooksCallback</h3>
@@ -425,7 +432,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Container for hooks with clean up and and options to target certain modules</p>
 <p>That being implemented, we can subclass these for adding hook behaviors.</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/activations.py#L103" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/activations.py#L117" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="storemodulestats" class="level3">
 <h3 class="anchored" data-anchor-id="storemodulestats">StoreModuleStats</h3>
@@ -434,7 +441,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </blockquote>
 <p>A hook for storing the activation statistics</p>
 <hr>
-<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/activations.py#L126" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<p><a href="https://github.com/jeremy/slowai/blob/main/slowai/activations.py#L142" target="_blank" style="float:right; font-size:smaller">source</a></p>
 </section>
 <section id="storemodulestatscb" class="level3">
 <h3 class="anchored" data-anchor-id="storemodulestatscb">StoreModuleStatsCB</h3>
@@ -444,12 +451,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </blockquote>
 <p>Callback for plotting the layer-wise activation statistics</p>
 <p>Now, we can rerun while keeping track of the activation stats</p>
-<div class="cell" data-execution_count="11">
+<div class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> CNN()</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>train(</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    model<span class="op">=</span>model,</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    extra_cbs<span class="op">=</span>[StoreModuleStatsCB(mods<span class="op">=</span>model.layers)],</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>cb <span class="op">=</span> StoreModuleStatsCB(mods<span class="op">=</span>model.layers)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>train(model<span class="op">=</span>model, extra_cbs<span class="op">=</span>[cb])</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>cb.mean_std_plot()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 
 <style>
@@ -480,14 +486,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>0.166</td>
-<td>2.275</td>
+<td>0.165</td>
+<td>2.277</td>
 <td>0</td>
 <td>train</td>
 </tr>
 <tr class="even">
-<td>0.250</td>
-<td>1.999</td>
+<td>0.284</td>
+<td>2.161</td>
 <td>0</td>
 <td>eval</td>
 </tr>
@@ -500,8 +506,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell-output cell-output-display">
 <p><img src="09_activations_files/figure-html/cell-11-output-4.png" class="img-fluid"></p>
 </div>
+</div>
+<div class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>cb.hist_plot()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="09_activations_files/figure-html/cell-11-output-5.png" class="img-fluid"></p>
+<p><img src="09_activations_files/figure-html/cell-12-output-1.png" class="img-fluid"></p>
 </div>
 </div>
 <p>Jeremy makes the point that his network isn’t training because the weights are close to 0, which makes them “dead units.”</p>
