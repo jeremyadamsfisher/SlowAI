@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['pipe', 'to_tensor', 'DataLoaders', 'batchify', 'tensorize_images', 'CancelFitException', 'CancelBatchException',
            'CancelEpochException', 'Callback', 'with_cbs', 'Learner', 'TrainCB', 'MetricsCB', 'DeviceCB', 'after',
-           'ProgressCB', 'fashion_mnist', 'TrainLearner', 'to_cpu', 'LRFinderCB', 'lr_find']
+           'ProgressCB', 'to_cpu', 'fashion_mnist', 'TrainLearner', 'LRFinderCB', 'lr_find']
 
 # %% ../nbs/08_learner.ipynb 3
 import math
@@ -31,6 +31,8 @@ from .datasets import show_images
 
 # %% ../nbs/08_learner.ipynb 6
 class DataLoaders:
+    """Wrapper around huggingface datasets to facilitate raw pytorch work"""
+
     def __init__(
         self,
         splits,
@@ -106,6 +108,9 @@ to_tensor = T.Compose(pipe)
 
 
 def batchify(f):
+    """Convert a function that processes a single feature
+    to processing a list of features"""
+
     def inner_(batch):
         return [f(example) for example in batch]
 
@@ -127,24 +132,28 @@ def tensorize_images(dls, feature="image", normalize=True):
 
 # %% ../nbs/08_learner.ipynb 17
 class CancelFitException(Exception):
-    ...
+    """Exit fit context"""
 
 
 class CancelBatchException(Exception):
-    ...
+    """Skip to the next batch"""
 
 
 class CancelEpochException(Exception):
-    ...
+    """Skip to the next epoch"""
 
 # %% ../nbs/08_learner.ipynb 19
 class Callback:
+    """Modify the training behavior"""
+
     def __init_subclass__(cls, order=0) -> None:
         cls.order = order
         super().__init_subclass__()
 
 # %% ../nbs/08_learner.ipynb 20
 class with_cbs:
+    """Run the callbacks lifecycle at the apropriate time"""
+
     def __init__(self, nm):
         self.nm = nm
 
@@ -163,6 +172,8 @@ class with_cbs:
 
 # %% ../nbs/08_learner.ipynb 21
 class Learner:
+    """Flexible training loop"""
+
     def __init__(
         self,
         model,
@@ -247,6 +258,8 @@ class Learner:
 
 # %% ../nbs/08_learner.ipynb 23
 class TrainCB(Callback):
+    """Training specific behaviors for the `Learner`"""
+
     def predict(self, learn):
         xb = learn.batch
         learn.preds = learn.model(*xb)
@@ -266,6 +279,8 @@ class TrainCB(Callback):
 
 # %% ../nbs/08_learner.ipynb 25
 class MetricsCB(Callback):
+    """Update and print metrics"""
+
     def __init__(self, *ms, **metrics):
         for o in ms:
             metrics[type(o).__name__] = o
@@ -298,6 +313,8 @@ class MetricsCB(Callback):
 
 # %% ../nbs/08_learner.ipynb 29
 class DeviceCB(Callback):
+    """Move tensors and model to the CPU/GPU/etc"""
+
     def __init__(self, device=def_device):
         fc.store_attr()
 
@@ -310,10 +327,13 @@ class DeviceCB(Callback):
 
 
 def after(callback_cls: Type[Callback]):
+    """Run a callback after another callback"""
     return callback_cls.order + 1
 
 
 class ProgressCB(Callback, order=after(MetricsCB)):
+    """Report the progress"""
+
     def __init__(self, plot=False):
         self.plot = plot
 
@@ -357,11 +377,23 @@ class ProgressCB(Callback, order=after(MetricsCB)):
                 y = [steps, self.val_losses]
                 self.mbar.update_graph([x, y])
 
+# %% ../nbs/08_learner.ipynb 30
+def to_cpu(x):
+    if isinstance(x, Mapping):
+        return {k: to_cpu(v) for k, v in x.items()}
+    if isinstance(x, list):
+        return [to_cpu(o) for o in x]
+    if isinstance(x, tuple):
+        return tuple(to_cpu(list(x)))
+    res = x.detach().cpu()
+    return res.float() if res.dtype == torch.float16 else res
+
 # %% ../nbs/08_learner.ipynb 31
 def fashion_mnist():
+    """Helper to use fashion MNIST"""
     return tensorize_images(DataLoaders.from_hf("fashion_mnist", bs=2048)).listify()
 
-# %% ../nbs/08_learner.ipynb 36
+# %% ../nbs/08_learner.ipynb 37
 class TrainLearner(Learner):
     def predict(self):
         xb, yb = self.batch
@@ -380,19 +412,11 @@ class TrainLearner(Learner):
     def zero_grad(self):
         self.opt.zero_grad()
 
-# %% ../nbs/08_learner.ipynb 42
-def to_cpu(x):
-    if isinstance(x, Mapping):
-        return {k: to_cpu(v) for k, v in x.items()}
-    if isinstance(x, list):
-        return [to_cpu(o) for o in x]
-    if isinstance(x, tuple):
-        return tuple(to_cpu(list(x)))
-    res = x.detach().cpu()
-    return res.float() if res.dtype == torch.float16 else res
-
 # %% ../nbs/08_learner.ipynb 43
 class LRFinderCB(Callback):
+    """Find an apopriate learning rate by increasing it by a constant factor for each batch
+    until the loss diverges"""
+
     def __init__(self, gamma=1.3, max_mult=3):
         fc.store_attr()
 
@@ -422,7 +446,7 @@ class LRFinderCB(Callback):
         ax.plot(self.lrs, self.losses)
         ax.set_xscale("log")
 
-# %% ../nbs/08_learner.ipynb 44
+
 @fc.patch
 def lr_find(self: Learner, gamma=1.3, max_mult=3, start_lr=1e-5, max_epochs=10):
     self.fit(max_epochs, lr=start_lr, cbs=LRFinderCB(gamma=gamma, max_mult=max_mult))

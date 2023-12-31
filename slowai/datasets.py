@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['inplace', 'subplots', 'get_grid', 'show_image', 'show_images']
 
-# %% ../nbs/05_datasets.ipynb 3
+# %% ../nbs/05_datasets.ipynb 4
 import math
 from itertools import zip_longest
 from typing import Optional
@@ -16,7 +16,7 @@ import torchvision.transforms.functional as T
 from datasets import load_dataset
 from torch.utils.data import DataLoader
 
-# %% ../nbs/05_datasets.ipynb 11
+# %% ../nbs/05_datasets.ipynb 12
 def inplace(f):
     def _f(b):
         f(b)
@@ -24,7 +24,7 @@ def inplace(f):
 
     return _f
 
-# %% ../nbs/05_datasets.ipynb 16
+# %% ../nbs/05_datasets.ipynb 17
 @fc.delegates(plt.subplots, keep=True)
 def subplots(
     nrows: int = 1,  # Number of rows in returned axes grid
@@ -44,7 +44,7 @@ def subplots(
         ax = np.array([ax])
     return fig, ax
 
-# %% ../nbs/05_datasets.ipynb 20
+# %% ../nbs/05_datasets.ipynb 21
 @fc.delegates(plt.subplots, keep=True)
 def subplots(
     nrows: int = 1,  # Number of rows in returned axes grid
