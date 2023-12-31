@@ -3,6 +3,7 @@ website:
     contents:
       - index.ipynb
       - 00_overview.ipynb
+      - 00_utils.ipynb
       - 01_diving_deeper.ipynb
       - 01_diving_deeper_homework.ipynb
       - 02_clustering.ipynb
