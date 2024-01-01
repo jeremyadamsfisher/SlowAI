@@ -8,11 +8,15 @@ website:
       - 02_clustering.ipynb
       - 03_calculus.ipynb
       - 04_minibatch_training.ipynb
-      - 05_datasets.ipynb
-      - 06_convs.ipynb
-      - 07_autoencoders.ipynb
-      - 08_learner.ipynb
-      - 09_activations.ipynb
-      - 10_initializations.ipynb
-      - 11_accelerated_sgd.ipynb
+      - 05_convs.ipynb
+      - 06_autoencoders.ipynb
+      - 07_learner.ipynb
+      - 08_activations.ipynb
+      - 09_initializations.ipynb
+      - 10_stable_sgd.ipynb
+      - 10a_homework.ipynb
+      - 11_resnets.ipynb
+      - 12_augmentation.ipynb
+      - 12a_homework.ipynb
       - 99_utils.ipynb
+      - hack.ipynb

@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['pipe', 'to_tensor', 'DataLoaders', 'batchify', 'tensorize_images', 'CancelFitException', 'CancelBatchException',
            'CancelEpochException', 'Callback', 'with_cbs', 'Learner', 'TrainCB', 'MetricsCB', 'DeviceCB', 'after',
-           'ProgressCB', 'to_cpu', 'fashion_mnist', 'TrainLearner', 'MomentumCB', 'LRFinderCB', 'lr_find']
+           'before', 'ProgressCB', 'to_cpu', 'fashion_mnist', 'TrainLearner', 'MomentumCB', 'LRFinderCB', 'lr_find']
 
 # %% ../nbs/07_learner.ipynb 3
 import math
@@ -52,18 +52,27 @@ class DataLoaders:
         dsd = load_dataset(dataset_id)
         return cls.from_dsd(dsd, **kwargs)
 
-    def with_transforms(self, ts, batched=True, lazy=False):
+    def with_transforms(self, ts, batched=True, lazy=False, splits=None):
         def map_(batch):
             for feature, transform in ts.items():
                 batch[feature] = transform(batch[feature])
             return batch
 
-        if lazy:
-            assert batched, "Lazy transforms must be batched"
-            # TODO: make this accretive
-            self.splits.set_transform(map_)
+        if splits is None:
+            if lazy:
+                assert batched, "Lazy transforms must be batched"
+                # TODO: make this accretive
+                self.splits.set_transform(map_)
+            else:
+                self.splits = self.splits.map(map_, batched=batched)
         else:
-            self.splits = self.splits.map(map_, batched=batched)
+            for split in splits:
+                if lazy:
+                    assert batched, "Lazy transforms must be batched"
+                    # TODO: make this accretive
+                    self.splits[split].set_transform(map_)
+                else:
+                    self.splits[split] = self.splits[split].map(map_, batched=batched)
 
         return self
 
@@ -329,6 +338,11 @@ class DeviceCB(Callback):
 def after(callback_cls: Type[Callback]):
     """Run a callback after another callback"""
     return callback_cls.order + 1
+
+
+def before(callback_cls: Type[Callback]):
+    """Run a callback before another callback"""
+    return callback_cls.order - 1
 
 
 class ProgressCB(Callback, order=after(MetricsCB)):

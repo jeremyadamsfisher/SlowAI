@@ -16,7 +16,6 @@ from einops import rearrange
 from torch import nn
 from torchmetrics.classification import MulticlassAccuracy
 
-from .utils import get_grid, show_image
 from slowai.learner import (
     Callback,
     DeviceCB,
@@ -26,6 +25,7 @@ from slowai.learner import (
     fashion_mnist,
     to_cpu,
 )
+from .utils import get_grid, show_image
 
 # %% ../nbs/08_activations.ipynb 4
 def set_seed(seed, deterministic=False):
@@ -88,7 +88,7 @@ class HooksCallback(Callback):
 
     def __init__(
         self,
-        hook_f,
+        hook_cls,
         mods=None,
         mod_filter=fc.noop,
         on_train=True,

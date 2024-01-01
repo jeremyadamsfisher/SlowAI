@@ -64,7 +64,6 @@ class NormalizeBatchCB(BatchTransformCB):
 # %% ../nbs/09_initializations.ipynb 44
 class GeneralReLU(nn.Module):
     """Generalized ReLU activation function with normalization and leakiness"""
-
     def __init__(self, leak=None, sub=None, max_=None):
         super().__init__()
         self.leak = leak
@@ -135,7 +134,7 @@ class LSUVInitialization(HooksCallback):
             with torch.no_grad():
                 for i, h in enumerate(self.hooks):
                     for n_batches in range(1_000):
-                        model(xb)
+                        learn.model(xb)
                         if not h.normalized():
                             h.normalize()
                         else:
@@ -188,7 +187,6 @@ C = Conv2dGeneral
 # %% ../nbs/09_initializations.ipynb 68
 class BatchNorm(nn.Module):
     """Batch normalization"""
-
     def __init__(self, num_filters, mom=0.1, eps=1e-5):
         super().__init__()
         self.mom = mom
