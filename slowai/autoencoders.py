@@ -10,7 +10,7 @@ from torch import nn, optim
 from tqdm import tqdm
 
 from .convs import conv, def_device, fashion_mnist, to_device
-from .datasets import show_images
+from .utils import show_images
 
 # %% ../nbs/06_autoencoders.ipynb 5
 def deconv(c_in, c_out, ks=3, act=True):

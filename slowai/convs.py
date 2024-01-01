@@ -19,7 +19,7 @@ from torch import nn, optim, tensor
 from torch.utils.data import DataLoader, default_collate
 from tqdm import tqdm
 
-from .datasets import show_image, show_images
+from .utils import show_image, show_images
 
 # %% ../nbs/05_convs.ipynb 18
 def conv(ni, nf, ks=3, stride=2, act=True):

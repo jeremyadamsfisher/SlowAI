@@ -5,11 +5,9 @@ __all__ = ['clean_ipython_hist', 'clean_tb', 'clean_mem', 'subplots', 'get_grid'
 
 # %% ../nbs/99_utils.ipynb 2
 import gc
+import math
 import sys
 import traceback
-
-import torch
-import math
 from itertools import zip_longest
 from typing import Optional
 
