@@ -1,1 +1,0 @@
-Sitemap: https://jeremy.github.io/slowai/sitemap.xml
