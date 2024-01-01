@@ -251,4 +251,8 @@ d = { 'settings': { 'branch': 'main',
                                  'slowai.overview.show_images': ('overview.html#show_images', 'slowai/overview.py')},
             'slowai.utils': { 'slowai.utils.clean_ipython_hist': ('utils.html#clean_ipython_hist', 'slowai/utils.py'),
                               'slowai.utils.clean_mem': ('utils.html#clean_mem', 'slowai/utils.py'),
-                              'slowai.utils.clean_tb': ('utils.html#clean_tb', 'slowai/utils.py')}}}
+                              'slowai.utils.clean_tb': ('utils.html#clean_tb', 'slowai/utils.py'),
+                              'slowai.utils.get_grid': ('utils.html#get_grid', 'slowai/utils.py'),
+                              'slowai.utils.show_image': ('utils.html#show_image', 'slowai/utils.py'),
+                              'slowai.utils.show_images': ('utils.html#show_images', 'slowai/utils.py'),
+                              'slowai.utils.subplots': ('utils.html#subplots', 'slowai/utils.py')}}}

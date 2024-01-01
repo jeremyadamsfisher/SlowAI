@@ -6,18 +6,14 @@ __all__ = ['C', 'BatchTransformCB', 'NormalizeBatchCB', 'GeneralReLU', 'init_lea
 
 # %% ../nbs/10_initializations.ipynb 3
 import math
-import random
-from contextlib import contextmanager
 from functools import partial
-from itertools import cycle
 
 import fastcore.all as fc
 import matplotlib.pyplot as plt
-import numpy as np
 import torch
 import torch.nn.functional as F
 from einops import rearrange
-from torch import Tensor, nn, tensor
+from torch import nn, tensor
 from torch.nn import init
 from torchmetrics.classification import MulticlassAccuracy
 
@@ -25,12 +21,10 @@ from slowai.activations import (
     Conv2dWithReLU,
     Hook,
     HooksCallback,
-    StoreModuleStats,
     StoreModuleStatsCB,
     set_seed,
 )
 from .convs import to_device
-from .datasets import get_grid, show_image
 from slowai.learner import (
     Callback,
     DeviceCB,
@@ -42,7 +36,6 @@ from slowai.learner import (
     fashion_mnist,
     to_cpu,
 )
-from .utils import clean_mem
 
 # %% ../nbs/10_initializations.ipynb 39
 class BatchTransformCB(Callback):
@@ -70,6 +63,8 @@ class NormalizeBatchCB(BatchTransformCB):
 
 # %% ../nbs/10_initializations.ipynb 44
 class GeneralReLU(nn.Module):
+    """Generalized ReLU activation function with normalization and leakiness"""
+
     def __init__(self, leak=None, sub=None, max_=None):
         super().__init__()
         self.leak = leak
@@ -192,6 +187,8 @@ C = Conv2dGeneral
 
 # %% ../nbs/10_initializations.ipynb 68
 class BatchNorm(nn.Module):
+    """Batch normalization"""
+
     def __init__(self, num_filters, mom=0.1, eps=1e-5):
         super().__init__()
         self.mom = mom
