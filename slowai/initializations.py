@@ -64,6 +64,7 @@ class NormalizeBatchCB(BatchTransformCB):
 # %% ../nbs/09_initializations.ipynb 44
 class GeneralReLU(nn.Module):
     """Generalized ReLU activation function with normalization and leakiness"""
+
     def __init__(self, leak=None, sub=None, max_=None):
         super().__init__()
         self.leak = leak
@@ -126,6 +127,7 @@ class LSUVInitialization(HooksCallback):
         fc.store_attr()
 
     def before_fit(self, learn):
+        super().before_fit(learn)
         try:
             trn = learn.dls["train"]
             xb, *_ = next(iter(trn))
@@ -187,6 +189,7 @@ C = Conv2dGeneral
 # %% ../nbs/09_initializations.ipynb 68
 class BatchNorm(nn.Module):
     """Batch normalization"""
+
     def __init__(self, num_filters, mom=0.1, eps=1e-5):
         super().__init__()
         self.mom = mom
