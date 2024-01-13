@@ -17,5 +17,6 @@ website:
       - 10a_homework.ipynb
       - 11_resnets.ipynb
       - 12_augmentation.ipynb
+      - 13_ddpm.ipynb
       - 99_utils.ipynb
       - hack.ipynb

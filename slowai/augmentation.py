@@ -7,59 +7,42 @@ __all__ = ['train', 'flops', 'hooks', 'summarize', 'RandCopy']
 import random
 import re
 from contextlib import contextmanager
-from functools import partial
+from math import sqrt
 from typing import Sequence
 
-import fastcore.all as fc
 import matplotlib.pyplot as plt
 import numpy as np
 import timm
 import torch
 import torch.nn.functional as F
 from einops import rearrange
-from IPython.display import Latex, Markdown, display
-from torch import nn
+from IPython.display import Markdown, display
+from torch import distributions, nn
 from torch.nn import init
 from torch.optim import lr_scheduler
-from torch.optim.lr_scheduler import OneCycleLR
 from torchmetrics.classification import MulticlassAccuracy
 from torchvision import transforms
 
 from slowai.activations import (
-    Conv2dWithReLU,
-    Hook,
-    HooksCallback,
     StoreModuleStatsCB,
-    set_seed,
+    set_seed
 )
 from slowai.initializations import (
-    BatchTransformCB,
-    CNNWithGeneralReLUAndBatchNorm,
-    GeneralReLU,
-    LSUVHook,
-    LSUVInitialization,
     init_leaky_weights,
-    set_seed,
+    set_seed
 )
 from slowai.learner import (
-    Callback,
-    CancelFitException,
-    DataLoaders,
     DeviceCB,
-    Learner,
     MetricsCB,
-    MomentumCB,
     ProgressCB,
-    TrainCB,
     TrainLearner,
     batchify,
-    before,
     def_device,
     fashion_mnist,
 )
-from .resnets import CNN, Conv, ResidualConvBlock
-from .sgd import BatchSchedulerCB, RecorderCB
-from .utils import show_image, show_images
+from .resnets import Conv, ResidualConvBlock
+from .sgd import BatchSchedulerCB
+from .utils import show_images
 
 # %% ../nbs/12_augmentation.ipynb 6
 def train(model, lr=1e-2, n_epochs=2, dls=fashion_mnist(512), extra_cbs=tuple()):
