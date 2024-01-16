@@ -7,6 +7,7 @@ __all__ = ['MixedPrecision', 'AccelerateCB']
 import random
 import re
 from contextlib import contextmanager
+from dataclasses import dataclass
 from functools import partial
 from math import sqrt
 from typing import Sequence
@@ -50,7 +51,7 @@ from .resnets import Conv, ResidualConvBlock
 from .sgd import BatchSchedulerCB
 from .utils import show_image, show_images
 
-# %% ../nbs/13_ddpm.ipynb 32
+# %% ../nbs/13_ddpm.ipynb 31
 class MixedPrecision(TrainCB, order=after(DeviceCB)):
     def before_fit(self, learn):
         self.scaler = torch.cuda.amp.GradScaler()
