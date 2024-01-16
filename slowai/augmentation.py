@@ -23,14 +23,8 @@ from torch.optim import lr_scheduler
 from torchmetrics.classification import MulticlassAccuracy
 from torchvision import transforms
 
-from slowai.activations import (
-    StoreModuleStatsCB,
-    set_seed
-)
-from slowai.initializations import (
-    init_leaky_weights,
-    set_seed
-)
+from .activations import StoreModuleStatsCB, set_seed
+from .initializations import init_leaky_weights, set_seed
 from slowai.learner import (
     DeviceCB,
     MetricsCB,

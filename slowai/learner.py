@@ -2,16 +2,18 @@
 
 # %% auto 0
 __all__ = ['pipe', 'to_tensor', 'DataLoaders', 'batchify', 'tensorize_images', 'CancelFitException', 'CancelBatchException',
-           'CancelEpochException', 'Callback', 'with_cbs', 'Learner', 'TrainCB', 'MetricsCB', 'DeviceCB', 'after',
-           'before', 'ProgressCB', 'to_cpu', 'fashion_mnist', 'TrainLearner', 'MomentumCB', 'LRFinderCB', 'lr_find']
+           'CancelEpochException', 'Callback', 'with_cbs', 'only', 'Learner', 'TrainCB', 'MetricsCB', 'DeviceCB',
+           'after', 'before', 'ProgressCB', 'to_cpu', 'fashion_mnist', 'TrainLearner', 'MomentumCB', 'LRFinderCB',
+           'lr_find']
 
 # %% ../nbs/07_learner.ipynb 3
 import math
+import multiprocessing
 import tempfile
 from copy import copy
 from functools import lru_cache, partial
 from pathlib import Path
-from typing import Mapping, Type, Union
+from typing import Mapping, Sequence, Type, Union
 
 import fastcore.all as fc
 import matplotlib.pyplot as plt
@@ -21,25 +23,26 @@ import torchmetrics
 import torchvision.transforms as T
 from datasets import load_dataset, load_from_disk
 from fastprogress import master_bar, progress_bar
+from IPython.utils import io
 from torch import optim
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader, default_collate
 
 from .autoencoders import get_model as get_ae_model
 from .convs import def_device, fit, to_device
-from .utils import show_images
+from .utils import Suppressor, show_images
 
-# %% ../nbs/07_learner.ipynb 6
+# %% ../nbs/07_learner.ipynb 7
 class DataLoaders:
     """Wrapper around huggingface datasets to facilitate raw pytorch work"""
 
     def __init__(
         self,
         splits,
-        nworkers: int = 0,
+        nworkers: int = multiprocessing.cpu_count() // 2,
         bs=32,
         collate_fn=default_collate,
-        tdir=tempfile.TemporaryDirectory(),
+        tdir=tempfile.TemporaryDirectory().name,
     ):
         fc.store_attr()
 
@@ -58,6 +61,7 @@ class DataLoaders:
                 batch[feature] = transform(batch[feature])
             return batch
 
+        # TODO: use a function here
         if splits is None:
             if lazy:
                 assert batched, "Lazy transforms must be batched"
@@ -91,10 +95,16 @@ class DataLoaders:
         ds = self.splits[split]
         nworkers = nworkers or self.nworkers
         if nworkers > 0:
+            ds_format = copy(ds.format)
+            ds.set_format("torch")  # Doesn't matter which, but needs to be serializable
             dir_ = Path(self.tdir) / split
             if not dir_.exists():
-                ds.save_to_disk(dir_)
-            ds = load_from_disk(dir_)
+                if fc.IN_JUPYTER:
+                    with io.capture_output():
+                        ds.save_to_disk(dir_)
+                else:
+                    ds.save_to_disk(dir_)
+            ds = load_from_disk(dir_).with_format(**ds_format)
         return DataLoader(
             ds,
             batch_size=self.bs,
@@ -111,7 +121,7 @@ class DataLoaders:
     def __getitem__(self, split):
         return self.dl(split)
 
-# %% ../nbs/07_learner.ipynb 9
+# %% ../nbs/07_learner.ipynb 11
 pipe = [T.PILToTensor(), T.ConvertImageDtype(torch.float)]
 to_tensor = T.Compose(pipe)
 
@@ -126,7 +136,7 @@ def batchify(f):
     return inner_
 
 
-def tensorize_images(dls, feature="image", normalize=True):
+def tensorize_images(dls, feature="image", normalize=True, pipe=pipe):
     """Tensorize and normalize the image feature"""
     if normalize:
         # Sample 100 images to estimate the mean and standard deviation
@@ -135,11 +145,12 @@ def tensorize_images(dls, feature="image", normalize=True):
         mu = pixels.mean()
         sigma = pixels.std()
         to_norm_tensor = T.Compose([*pipe, T.Normalize([mu], [sigma])])
+
         return dls.with_transforms({"image": batchify(to_norm_tensor)}, lazy=True)
     else:
-        return dls.with_transforms({"image": batchify(to_tensor)}, lazy=True)
+        return dls.with_transforms({"image": batchify(T.Compose(pipe))}, lazy=True)
 
-# %% ../nbs/07_learner.ipynb 17
+# %% ../nbs/07_learner.ipynb 20
 class CancelFitException(Exception):
     """Exit fit context"""
 
@@ -151,7 +162,7 @@ class CancelBatchException(Exception):
 class CancelEpochException(Exception):
     """Skip to the next epoch"""
 
-# %% ../nbs/07_learner.ipynb 19
+# %% ../nbs/07_learner.ipynb 22
 class Callback:
     """Modify the training behavior"""
 
@@ -159,7 +170,7 @@ class Callback:
         cls.order = order
         super().__init_subclass__()
 
-# %% ../nbs/07_learner.ipynb 20
+# %% ../nbs/07_learner.ipynb 23
 class with_cbs:
     """Run the callbacks lifecycle at the apropriate time"""
 
@@ -179,7 +190,14 @@ class with_cbs:
 
         return _f
 
-# %% ../nbs/07_learner.ipynb 21
+# %% ../nbs/07_learner.ipynb 24
+def only(f):
+    """If the lifecycle hook is decorated as such, only run this
+    hook and not other callbacks' hooks"""
+    f.only = True
+    return f
+
+# %% ../nbs/07_learner.ipynb 25
 class Learner:
     """Flexible training loop"""
 
@@ -196,6 +214,12 @@ class Learner:
         fc.store_attr()
 
     def run_cbs(self, method_nm):
+        for cb in self.cbs:
+            method = getattr(cb, method_nm, None)
+            if method is not None:
+                if getattr(method, "only", False):
+                    method(self)
+                    return
         for cb in sorted(self.cbs, key=lambda cb: cb.order):
             method = getattr(cb, method_nm, None)
             if method is not None:
@@ -265,7 +289,7 @@ class Learner:
     def training(self):
         return self.model.training
 
-# %% ../nbs/07_learner.ipynb 23
+# %% ../nbs/07_learner.ipynb 27
 class TrainCB(Callback):
     """Training specific behaviors for the `Learner`"""
 
@@ -286,7 +310,7 @@ class TrainCB(Callback):
     def zero_grad(self, learn):
         learn.opt.zero_grad()
 
-# %% ../nbs/07_learner.ipynb 25
+# %% ../nbs/07_learner.ipynb 29
 class MetricsCB(Callback):
     """Update and print metrics"""
 
@@ -313,14 +337,12 @@ class MetricsCB(Callback):
         self._log(log)
 
     def after_batch(self, learn):
-        x, y, *_ = learn.batch
-        x = x.cpu()
-        y = y.cpu()
+        x, y = to_cpu(learn.batch)
         for m in self.metrics.values():
             m.update(learn.preds.cpu(), y)
         self.loss.update(learn.loss.cpu(), weight=len(x))
 
-# %% ../nbs/07_learner.ipynb 29
+# %% ../nbs/07_learner.ipynb 33
 class DeviceCB(Callback):
     """Move tensors and model to the CPU/GPU/etc"""
 
@@ -335,21 +357,29 @@ class DeviceCB(Callback):
         learn.batch = to_device(learn.batch, device=self.device)
 
 
-def after(callback_cls: Type[Callback]):
+def after(callback_cls: Union[Sequence[Type[Callback]], Type[Callback]]):
     """Run a callback after another callback"""
-    return callback_cls.order + 1
+    if isinstance(callback_cls, type):
+        return callback_cls.order + 1
+    else:
+        return max(c.order for c in callback_cls) + 1
 
 
-def before(callback_cls: Type[Callback]):
+def before(callback_cls: Union[Sequence[Type[Callback]], Type[Callback]]):
     """Run a callback before another callback"""
-    return callback_cls.order - 1
+    if isinstance(callback_cls, type):
+        return callback_cls.order - 1
+    else:
+        return min(c.order for c in callback_cls) + 1
 
 
 class ProgressCB(Callback, order=after(MetricsCB)):
     """Report the progress"""
 
-    def __init__(self, plot=False):
+    def __init__(self, plot=False, periodicity=10):
         self.plot = plot
+        self.periodicity = periodicity
+        self.i = 0
 
     def before_fit(self, learn):
         learn.epochs = self.mbar = master_bar(learn.epochs)
@@ -372,13 +402,14 @@ class ProgressCB(Callback, order=after(MetricsCB)):
         learn.dl.comment = f"{learn.loss:.3f}"
         if self.plot and hasattr(learn, "metrics") and learn.training:
             self.losses.append(learn.loss.item())
-            if self.val_losses:
+            if self.val_losses and self.i % self.periodicity == 0:
                 x = [fc.L.range(self.losses), self.losses]
                 steps = fc.L.range(learn.epoch).map(
                     lambda x: (x + 1) * len(learn.dls["train"])
                 )
                 y = [steps, self.val_losses]
                 self.mbar.update_graph([x, y])
+        self.i += 1
 
     def after_epoch(self, learn):
         if not learn.training:
@@ -391,7 +422,7 @@ class ProgressCB(Callback, order=after(MetricsCB)):
                 y = [steps, self.val_losses]
                 self.mbar.update_graph([x, y])
 
-# %% ../nbs/07_learner.ipynb 30
+# %% ../nbs/07_learner.ipynb 34
 def to_cpu(x):
     if isinstance(x, Mapping):
         return {k: to_cpu(v) for k, v in x.items()}
@@ -402,12 +433,12 @@ def to_cpu(x):
     res = x.detach().cpu()
     return res.float() if res.dtype == torch.float16 else res
 
-# %% ../nbs/07_learner.ipynb 31
+# %% ../nbs/07_learner.ipynb 35
 def fashion_mnist(bs=2048):
     """Helper to use fashion MNIST"""
     return tensorize_images(DataLoaders.from_hf("fashion_mnist", bs=bs)).listify()
 
-# %% ../nbs/07_learner.ipynb 37
+# %% ../nbs/07_learner.ipynb 41
 class TrainLearner(Learner):
     """Sane training loop"""
 
@@ -428,7 +459,7 @@ class TrainLearner(Learner):
     def zero_grad(self):
         self.opt.zero_grad()
 
-# %% ../nbs/07_learner.ipynb 41
+# %% ../nbs/07_learner.ipynb 45
 class MomentumCB(Callback):
     def __init__(self, momentum=0.85):
         self.momentum = momentum
@@ -438,7 +469,7 @@ class MomentumCB(Callback):
             for p in learn.model.parameters():
                 p.grad *= self.momentum
 
-# %% ../nbs/07_learner.ipynb 44
+# %% ../nbs/07_learner.ipynb 48
 class LRFinderCB(Callback):
     """Find an apopriate learning rate by increasing it by a constant factor for each batch
     until the loss diverges"""
