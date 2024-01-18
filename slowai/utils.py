@@ -2,7 +2,7 @@
 
 # %% auto 0
 __all__ = ['clean_ipython_hist', 'clean_tb', 'clean_mem', 'subplots', 'get_grid', 'show_image', 'show_images', 'glomf',
-           'Suppressor']
+           'Suppressor', 'download_image']
 
 # %% ../nbs/99_utils.ipynb 2
 import gc
@@ -16,10 +16,12 @@ from typing import Optional
 import fastcore.all as fc
 import matplotlib.pyplot as plt
 import numpy as np
+import requests
 import torch
 import torchvision.transforms.functional as T
 from datasets import load_dataset
 from glom import glom
+from PIL import Image
 from torch.utils.data import DataLoader
 
 # %% ../nbs/99_utils.ipynb 3
@@ -189,3 +191,12 @@ class Suppressor:
 
     def flush(self):
         pass
+
+# %% ../nbs/99_utils.ipynb 10
+def download_image(image_url, resize=None) -> torch.Tensor:
+    response = requests.get(image_url, stream=True)
+    assert response.status_code == 200
+    img = Image.open(response.raw)
+    if resize:
+        img = img.resize(resize)
+    return T.to_tensor(img)
