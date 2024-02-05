@@ -18,5 +18,11 @@ website:
       - 11_resnets.ipynb
       - 12_augmentation.ipynb
       - 13_ddpm.ipynb
+      - 14_style_transfer.ipynb
+      - 15_neural_cellular_automata.ipynb
+      - 16_cosine.ipynb
+      - 17_cifar10.ipynb
+      - 18_fid.ipynb
+      - 19_noise_schedules.ipynb
+      - 20_ddim.ipynb
       - 99_utils.ipynb
-      - hack.ipynb

@@ -10,7 +10,7 @@ __all__ = ['pipe', 'to_tensor', 'DataLoaders', 'batchify', 'tensorize_images', '
 import math
 import multiprocessing
 import tempfile
-from copy import copy
+from copy import copy, deepcopy
 from functools import lru_cache, partial
 from pathlib import Path
 from typing import Mapping, Sequence, Type, Union
@@ -32,7 +32,7 @@ from .autoencoders import get_model as get_ae_model
 from .convs import def_device, fit, to_device
 from .utils import Suppressor, show_images
 
-# %% ../nbs/07_learner.ipynb 7
+# %% ../nbs/07_learner.ipynb 6
 class DataLoaders:
     """Wrapper around huggingface datasets to facilitate raw pytorch work"""
 
@@ -44,7 +44,11 @@ class DataLoaders:
         collate_fn=default_collate,
         tdir=tempfile.TemporaryDirectory().name,
     ):
-        fc.store_attr()
+        self.splits = splits
+        self.nworkers = nworkers
+        self.bs = bs
+        self.collate_fn = collate_fn
+        self.tdir = tdir
 
     @classmethod
     def from_dsd(cls, dsd, **kwargs):
@@ -96,14 +100,16 @@ class DataLoaders:
         nworkers = nworkers or self.nworkers
         if nworkers > 0:
             ds_format = copy(ds.format)
-            ds.set_format("torch")  # Doesn't matter which, but needs to be serializable
+            dsd = ds.with_format(
+                "torch"
+            )  # Doesn't matter which format, but needs to be serializable
             dir_ = Path(self.tdir) / split
             if not dir_.exists():
                 if fc.IN_JUPYTER:
                     with io.capture_output():
-                        ds.save_to_disk(dir_)
+                        dsd.save_to_disk(dir_)
                 else:
-                    ds.save_to_disk(dir_)
+                    dsd.save_to_disk(dir_)
             ds = load_from_disk(dir_).with_format(**ds_format)
         return DataLoader(
             ds,
@@ -121,7 +127,7 @@ class DataLoaders:
     def __getitem__(self, split):
         return self.dl(split)
 
-# %% ../nbs/07_learner.ipynb 11
+# %% ../nbs/07_learner.ipynb 10
 pipe = [T.PILToTensor(), T.ConvertImageDtype(torch.float)]
 to_tensor = T.Compose(pipe)
 
@@ -140,15 +146,15 @@ def tensorize_images(dls, feature="image", normalize=True, pipe=pipe):
     """Tensorize and normalize the image feature"""
     if normalize:
         # Sample 100 images to estimate the mean and standard deviation
-        imgs = dls.splits["train"].shuffle()[:100]["image"]
+        imgs = dls.splits["train"].shuffle()[:100][feature]
         pixels = torch.stack([to_tensor(img) for img in imgs]).view(-1)
         mu = pixels.mean()
         sigma = pixels.std()
         to_norm_tensor = T.Compose([*pipe, T.Normalize([mu], [sigma])])
 
-        return dls.with_transforms({"image": batchify(to_norm_tensor)}, lazy=True)
+        return dls.with_transforms({feature: batchify(to_norm_tensor)}, lazy=True)
     else:
-        return dls.with_transforms({"image": batchify(T.Compose(pipe))}, lazy=True)
+        return dls.with_transforms({feature: batchify(T.Compose(pipe))}, lazy=True)
 
 # %% ../nbs/07_learner.ipynb 20
 class CancelFitException(Exception):
@@ -321,7 +327,7 @@ class MetricsCB(Callback):
         self.all_metrics = copy(metrics)
         self.all_metrics["loss"] = self.loss = torchmetrics.aggregation.MeanMetric()
 
-    def _log(self, d):
+    def _log(self, d, learn):
         print(d)
 
     def before_fit(self, learn):
@@ -334,7 +340,7 @@ class MetricsCB(Callback):
         log = {k: f"{v.compute():.3f}" for k, v in self.all_metrics.items()}
         log["epoch"] = learn.epoch
         log["train"] = "train" if learn.model.training else "eval"
-        self._log(log)
+        self._log(log, learn)
 
     def after_batch(self, learn):
         x, y = to_cpu(learn.batch)
@@ -389,7 +395,7 @@ class ProgressCB(Callback, order=after(MetricsCB)):
         self.losses = []
         self.val_losses = []
 
-    def _log(self, d):
+    def _log(self, d, learn):
         if self.first:
             self.mbar.write(list(d), table=True)
             self.first = False
@@ -436,9 +442,11 @@ def to_cpu(x):
 # %% ../nbs/07_learner.ipynb 35
 def fashion_mnist(bs=2048):
     """Helper to use fashion MNIST"""
-    return tensorize_images(DataLoaders.from_hf("fashion_mnist", bs=bs)).listify()
+    return tensorize_images(
+        DataLoaders.from_hf("fashion_mnist", bs=bs, nworkers=4)
+    ).listify()
 
-# %% ../nbs/07_learner.ipynb 41
+# %% ../nbs/07_learner.ipynb 42
 class TrainLearner(Learner):
     """Sane training loop"""
 
@@ -459,7 +467,7 @@ class TrainLearner(Learner):
     def zero_grad(self):
         self.opt.zero_grad()
 
-# %% ../nbs/07_learner.ipynb 45
+# %% ../nbs/07_learner.ipynb 46
 class MomentumCB(Callback):
     def __init__(self, momentum=0.85):
         self.momentum = momentum
@@ -469,7 +477,7 @@ class MomentumCB(Callback):
             for p in learn.model.parameters():
                 p.grad *= self.momentum
 
-# %% ../nbs/07_learner.ipynb 48
+# %% ../nbs/07_learner.ipynb 49
 class LRFinderCB(Callback):
     """Find an apopriate learning rate by increasing it by a constant factor for each batch
     until the loss diverges"""
