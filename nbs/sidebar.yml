@@ -17,12 +17,17 @@ website:
       - 10a_homework.ipynb
       - 11_resnets.ipynb
       - 12_augmentation.ipynb
+      - 12a_augmentation_with_normalization.ipynb
       - 13_ddpm.ipynb
       - 14_style_transfer.ipynb
       - 15_neural_cellular_automata.ipynb
-      - 16_cosine.ipynb
-      - 17_cifar10.ipynb
-      - 18_fid.ipynb
-      - 19_noise_schedules.ipynb
-      - 20_ddim.ipynb
+      - 16_cifar10.ipynb
+      - 17_fid.ipynb
+      - 18_noise_schedules.ipynb
+      - 19_ddim.ipynb
+      - 20_cosine.ipynb
+      - 21_predicting_t.ipynb
+      - 22_tiny_imagenet_a.ipynb
+      - 23_tiny_imagenet_b.ipynb
+      - 24_super_resolution.ipynb
       - 99_utils.ipynb

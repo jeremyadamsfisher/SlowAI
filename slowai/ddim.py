@@ -71,6 +71,7 @@ def sample(ddpm, model, n=16, device=def_device, return_all=False):
     if return_all:
         x_ts, x_0s = zip(*preds)
         return x_ts, x_0s
+
     return x_0
 
 # %% ../nbs/19_ddim.ipynb 11
@@ -92,7 +93,7 @@ def animate(imgs):
 
 # %% ../nbs/19_ddim.ipynb 16
 @torch.no_grad()
-def diffusers_sample(sched, sz=(512, 1, 32, 32), skip_steps=None, **kwargs):
+def diffusers_sample(sched, sz=(256, 1, 32, 32), skip_steps=None, **kwargs):
     if skip_steps is None:
         skip_steps = []
     x_t = torch.randn(sz).to(def_device)

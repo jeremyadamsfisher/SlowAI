@@ -117,19 +117,18 @@ class HooksCallback(Callback):
 class StoreModuleStats(Hook):
     """A hook for storing the activation statistics"""
 
-    def __init__(self, m, on_train=True, on_valid=False):
+    def __init__(self, m, on_train=True, on_valid=False, periodicity=1):
         self.moments = []
         self.hists = []
-        self.on_train = on_train
-        self.on_valid = on_valid
 
         def append_moments(module, _, activations):
-            trn = self.on_train and module.training
-            vld = self.on_valid and not module.training
-            if trn or vld:
-                a = to_cpu(activations)
-                self.moments.append((a.mean(), a.std()))
-                self.hists.append(a.abs().histc(40, 0, 10))
+            if len(self.moments) % periodicity == 0:
+                trn = on_train and module.training
+                vld = on_valid and not module.training
+                if trn or vld:
+                    a = to_cpu(activations)
+                    self.moments.append((a.mean(), a.std()))
+                    self.hists.append(a.abs().histc(40, 0, 10))
 
         self.hook = m.register_forward_hook(append_moments)
 
@@ -148,9 +147,13 @@ class StoreModuleStatsCB(HooksCallback):
         mod_filter=fc.noop,
         on_train=True,
         on_valid=False,
+        hook_kwargs=None,
     ):
         fc.store_attr()
-        self.hook_cls = StoreModuleStats
+        if hook_kwargs:
+            self.hook_cls = partial(StoreModuleStats, **hook_kwargs)
+        else:
+            self.hook_cls = StoreModuleStats
 
     def hist_plot(self):
         fig, axes = get_grid(len(self.hooks))

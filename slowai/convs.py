@@ -58,10 +58,7 @@ def get_model():
     )
     return model.to(def_device)
 
-
-get_model()
-
-# %% ../nbs/05_convs.ipynb 24
+# %% ../nbs/05_convs.ipynb 25
 def accuracy(y, y_pred):
     n, _ = y.shape
     return (y.argmax(axis=1) == y_pred).sum() / n
@@ -108,7 +105,7 @@ def get_dls_from_dataset_dict(dsd, collate_fn=default_collate, bs=32):
             dls.append(dl)
         yield dls
 
-# %% ../nbs/05_convs.ipynb 25
+# %% ../nbs/05_convs.ipynb 26
 def fashion_collate(examples):
     batch = default_collate(examples)
     xb = batch["image"][:, None, ...].float() / 255

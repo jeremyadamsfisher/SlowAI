@@ -84,20 +84,33 @@ class DataLoaders:
 
         return self
 
-    def listify(self):
+    def listify(self, columns=None):
         """Yield a list instead of a dictionary"""
+        if columns is None:
+            columns = self.splits["train"].features
+
         s = copy(self)
 
         def collate_fn(examples):
             cols = default_collate(examples)
-            return [cols[f] for f in self.splits["train"].features]
+            return [cols[f] for f in columns]
 
         s.collate_fn = collate_fn
         return s
 
+    def get_unique_outputs(self, column):
+        outputs = set()
+        for _, split in self.splits.items():
+            for row in split:
+                output = row[column]
+                if isinstance(output, torch.Tensor):
+                    output = output.item()
+                outputs.add(output)
+        return sorted(outputs)
+
     def dl(self, split, nworkers=None):
         ds = self.splits[split]
-        nworkers = nworkers or self.nworkers
+        nworkers = self.nworkers if nworkers is None else nworkers
         if nworkers > 0:
             ds_format = copy(ds.format)
             dsd = ds.with_format(

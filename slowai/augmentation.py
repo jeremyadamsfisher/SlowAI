@@ -112,6 +112,10 @@ def hooks(mods, f):
 
 def summarize(m, mods, dls=fashion_mnist(8)):
     xb, _ = dls.peek()
+
+    m = m.to(def_device)
+    xb = xb.to(def_device)
+
     tp = 0
     tf = 0
     rows = ["|Type|Input|Output|N. params|MFlops|", "|--|--|--|--|--|"]
@@ -134,10 +138,10 @@ def summarize(m, mods, dls=fashion_mnist(8)):
         l = f"| {type(m).__name__} | {tuple(i.shape)} | {tuple(o.shape)} | {np:,} | {nflops:.1f}"
         rows.append(l)
 
-    with hooks(mods, summarize_module):
+    with hooks(mods, summarize_module), torch.no_grad():
         m(xb)
 
-    rows.append(f"| Total | | | {tp:,} | |")
+    rows.append(f"| Total | | | {tp:,} | {tf:} |")
     display(Markdown("\n".join(rows)))
 
 # %% ../nbs/12_augmentation.ipynb 14
