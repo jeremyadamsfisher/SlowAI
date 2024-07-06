@@ -77,11 +77,11 @@ class ContinuousDDPM(DDPM, order=after(DeviceCB)):
         (x_t, t), _ = learn.batch
         learn.preds = learn.model(x_t, t).sample
 
-# %% ../nbs/20_cosine.ipynb 18
+# %% ../nbs/20_cosine.ipynb 19
 def denoisify(x_t, noise, t):
     return (x_t - (1 - ᾱ(t)).sqrt() * noise) / ᾱ(t).sqrt()
 
-# %% ../nbs/20_cosine.ipynb 23
+# %% ../nbs/20_cosine.ipynb 24
 @torch.no_grad()
 def ddpm(model, sz=(16, 1, 32, 32), device=def_device, n_steps=100):
     x_t = torch.randn(sz, device=device)
@@ -105,7 +105,7 @@ def ddpm(model, sz=(16, 1, 32, 32), device=def_device, n_steps=100):
 
     return x_t
 
-# %% ../nbs/20_cosine.ipynb 26
+# %% ../nbs/20_cosine.ipynb 27
 def ddim_noisify(η, x_0_pred, noise_pred, t, t_next):
     σ_t = η * ((1 - ᾱ(t_next)) / (1 - ᾱ(t))).sqrt() * (1 - ᾱ(t) / ᾱ(t_next)).sqrt()
     ε_t = torch.randn(x_0_pred.shape).to(x_0_pred.device)
@@ -120,7 +120,7 @@ def ddim_noisify(η, x_0_pred, noise_pred, t, t_next):
         x_t += σ_t * ε_t
     return x_t
 
-# %% ../nbs/20_cosine.ipynb 27
+# %% ../nbs/20_cosine.ipynb 28
 @torch.no_grad()
 def ddim(
     model,

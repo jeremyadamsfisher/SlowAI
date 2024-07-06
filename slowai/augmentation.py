@@ -110,11 +110,14 @@ def hooks(mods, f):
         h.remove()
 
 
-def summarize(m, mods, dls=fashion_mnist(8)):
-    xb, _ = dls.peek()
+def summarize(m, mods, dls=None, xb_=None):
+    if xb is None:
+        xb, _ = dls.peek()
 
-    m = m.to(def_device)
-    xb = xb.to(def_device)
+        m = m.to(def_device)
+        xb = xb.to(def_device)
+    else:
+        xb = xb_
 
     tp = 0
     tf = 0

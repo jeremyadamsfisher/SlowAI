@@ -151,3 +151,5 @@ checklink/cookies.txt
 .quarto
 data/mnist.pkl.gz
 mnist.pkl.gz
+
+tiny-imagenet-200
