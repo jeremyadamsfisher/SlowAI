@@ -43,6 +43,7 @@ postprocess = T.Compose([T.ConvertImageDtype(torch.float), norm])
 
 # %% ../nbs/24_super_resolution.ipynb 6
 def preprocess(examples, pipe, erase):
+    """Factory to preprocess images for training and testing"""
     p = T.Compose(pipe)
     imgs = []
     for img in examples["image"]:
@@ -59,6 +60,7 @@ def preprocess(examples, pipe, erase):
 
 # %% ../nbs/24_super_resolution.ipynb 7
 def get_imagenet_super_rez_dls(bs=512):
+    """Get the Imagenet Super resolution data"""
     dsd = tiny_imagenet_dataset_dict()
     dsd["train"].set_transform(partial(preprocess, pipe=preprocess_trn, erase=True))
     dsd["train"] = dsd["train"].shuffle()
@@ -79,6 +81,8 @@ def get_imagenet_super_rez_dls(bs=512):
 
 # %% ../nbs/24_super_resolution.ipynb 11
 class Conv(nn.Conv2d):
+    """Convolutional neural network wrapper"""
+
     def __init__(self, c_in, c_out, stride=2, ks=3, **kwargs):
         super().__init__(
             c_in,
@@ -133,6 +137,8 @@ class ResidualConvBlock(nn.Module):
 
 # %% ../nbs/24_super_resolution.ipynb 13
 class UpsamplingResidualConvBlock(ResidualConvBlock):
+    """Conv block with an upsampling pass"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         assert self.stride == 1
@@ -145,6 +151,8 @@ class UpsamplingResidualConvBlock(ResidualConvBlock):
 
 # %% ../nbs/24_super_resolution.ipynb 14
 class KaimingMixin:
+    """Helper to initialize the network using Kaiming"""
+
     @staticmethod
     def init_kaiming(m):
         if isinstance(m, (nn.Conv1d, nn.Conv2d, nn.Conv3d)):
@@ -214,6 +222,8 @@ class AutoEncoder(nn.Sequential, KaimingMixin):
 
 # %% ../nbs/24_super_resolution.ipynb 28
 class TinyUnet(nn.Module, KaimingMixin):
+    """U-net"""
+
     def __init__(
         self,
         nfs: list[int] = (32, 64, 128, 256, 512, 1024),

@@ -23,12 +23,16 @@ from .learner import DataLoaders
 from .tinyimagenet_a import denorm, fill, norm
 from .utils import show_images
 
-# %% ../nbs/25_coco_a.ipynb 5
+# %% ../nbs/25_coco_a.ipynb 6
 def to_img(im):
+    """Convert PIL image to numpy"""
     return np.array(im).astype(np.float32) / 255
 
-# %% ../nbs/25_coco_a.ipynb 6
+# %% ../nbs/25_coco_a.ipynb 7
 def black_and_white(im, viz=False, thresh=0.01):
+    """Infer whether image is black and white by seeing how much
+    the original image and a converted black-and-white version
+    differ from one another"""
     if isinstance(im, str):
         im = Image.open(im)
     if im.mode == "L":
@@ -42,8 +46,10 @@ def black_and_white(im, viz=False, thresh=0.01):
         show_images([im_color], titles=[f"Delta: {delta:.4f}"])
     return delta < thresh
 
-# %% ../nbs/25_coco_a.ipynb 12
+# %% ../nbs/25_coco_a.ipynb 14
 def coco_2017_trn(fps=None, n=None, remove_bw=True):
+    """Combine the image preprocessing logic and return a
+    huggingface dataset"""
     if fps is None:
         fps = Path(fp).glob("**/*.jpg")
     if n:
@@ -61,7 +67,7 @@ def coco_2017_trn(fps=None, n=None, remove_bw=True):
     ds = ds.train_test_split(test_size=0.1)
     return ds
 
-# %% ../nbs/25_coco_a.ipynb 15
+# %% ../nbs/25_coco_a.ipynb 17
 def crop_to_box(img: "Image"):
     width, height = img.size
     if width > height:
@@ -81,7 +87,7 @@ def crop_to_box(img: "Image"):
     img_cropped = img.crop((left, top, right, bottom))
     return img_cropped
 
-# %% ../nbs/25_coco_a.ipynb 16
+# %% ../nbs/25_coco_a.ipynb 18
 trn_preprocess_super_rez = [
     T.RandomHorizontalFlip(),
     T.ColorJitter(brightness=(0.35, 1.65), hue=(-0.05, 0.05)),
@@ -100,7 +106,7 @@ tst_preprocess_super_rez = [
 blur = T.GaussianBlur((5, 9), (0.1, 5.0))
 postprocess_ = T.Compose([T.ConvertImageDtype(torch.float), norm])
 
-# %% ../nbs/25_coco_a.ipynb 17
+# %% ../nbs/25_coco_a.ipynb 19
 def preprocess_super_rez(examples, pipe, extra_blur=False):
     pre = T.Compose(pipe)
     imgs = []
@@ -118,7 +124,7 @@ def preprocess_super_rez(examples, pipe, extra_blur=False):
     imgs_hr, imgs_lr = map(torch.stack, zip(*imgs))
     return {"image_high_rez": imgs_hr, "image_low_rez": imgs_lr}
 
-# %% ../nbs/25_coco_a.ipynb 19
+# %% ../nbs/25_coco_a.ipynb 21
 def get_coco_dataset(
     fac,
     trn,
@@ -128,7 +134,7 @@ def get_coco_dataset(
     n=None,
     columns=["image_low_rez", "image_high_rez"],
 ):
-    fps = Path(fp).glob("**/*.jpg")
+    fps = list(Path(fp).glob("**/*.jpg"))
     dsd = coco_2017_trn(fps, n=n)
     dsd["train"].set_transform(partial(fac, pipe=trn))
     dsd["train"] = dsd["train"].shuffle()
@@ -145,7 +151,7 @@ def get_coco_dataset(
 
     return DataLoaders.from_dsd(dsd, bs=bs).listify(columns=columns)
 
-# %% ../nbs/25_coco_a.ipynb 20
+# %% ../nbs/25_coco_a.ipynb 22
 get_coco_dataset_super_rez = partial(
     get_coco_dataset,
     preprocess_super_rez,
@@ -153,10 +159,10 @@ get_coco_dataset_super_rez = partial(
     tst_preprocess_super_rez,
 )
 
-# %% ../nbs/25_coco_a.ipynb 23
+# %% ../nbs/25_coco_a.ipynb 25
 grayscale = T.Grayscale(num_output_channels=3)
 
-# %% ../nbs/25_coco_a.ipynb 24
+# %% ../nbs/25_coco_a.ipynb 26
 def preprocess_colorization(examples, pipe):
     pre = T.Compose(pipe)
     imgs = []
@@ -168,7 +174,7 @@ def preprocess_colorization(examples, pipe):
     imgs_color, imgs_bw = map(torch.stack, zip(*imgs))
     return {"color": imgs_color, "bw": imgs_bw}
 
-# %% ../nbs/25_coco_a.ipynb 25
+# %% ../nbs/25_coco_a.ipynb 27
 get_coco_dataset_colorization = partial(
     get_coco_dataset,
     preprocess_colorization,

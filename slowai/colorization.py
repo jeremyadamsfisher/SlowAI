@@ -35,6 +35,9 @@ from .utils import show_image, show_images
 
 # %% ../nbs/26_colorization.ipynb 24
 class TinyUnetWithMultiresolutionOutputs(nn.Module, KaimingMixin):
+    """U-net with outputs at multiple resolutions, enabling training
+    that target these lower resolutions"""
+
     def __init__(
         self,
         nfs: list[int] = (32, 64, 128, 256, 512, 1024),
@@ -88,10 +91,11 @@ class ColorizationLearner(TrainCB):
             loss += learn.loss_func(xp_final, yb)
         learn.loss = loss
 
-# %% ../nbs/26_colorization.ipynb 27
+# %% ../nbs/26_colorization.ipynb 26
 def train2(
     model, dls, lr=4e-3, n_epochs=25, extra_cbs=[MetricsCB()], loss_fn=F.mse_loss
 ):
+    """Train the Unet with multiple resolution outputs"""
     T_max = len(dls["train"]) * n_epochs
     scheduler = BatchSchedulerCB(lr_scheduler.OneCycleLR, max_lr=lr, total_steps=T_max)
     cbs = [

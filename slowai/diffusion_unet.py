@@ -33,6 +33,8 @@ def timestep_embedding(ts, emb_dim, max_period=10_000):
 
 # %% ../nbs/27_diffusion_unet.ipynb 24
 class Conv(nn.Module):
+    """Wrapper for a Conv block with normalization and activation"""
+
     def __init__(self, c_in, c_out, ks=3, stride=1):
         super().__init__()
         self.norm = nn.BatchNorm2d(c_in)
@@ -54,6 +56,8 @@ class Conv(nn.Module):
 
 # %% ../nbs/27_diffusion_unet.ipynb 25
 class EmbeddingPreactResBlock(nn.Module):
+    """Conv res block with the preactivation configuration"""
+
     def __init__(self, t_embed, c_in, c_out, ks=3, stride=2):
         super().__init__()
         self.t_embed = t_embed
@@ -83,6 +87,9 @@ class EmbeddingPreactResBlock(nn.Module):
 
 # %% ../nbs/27_diffusion_unet.ipynb 26
 class SaveTimeActivationMixin:
+    """Helper to save the output of the downblocks to consume in
+    the upblocks"""
+
     def forward(self, x, t):
         self.output = super().forward(x, t)
         return self.output
@@ -92,10 +99,12 @@ class TResBlock(
     SaveTimeActivationMixin,
     EmbeddingPreactResBlock,
 ):
-    ...
+    """Res block with saved outputs"""
 
 # %% ../nbs/27_diffusion_unet.ipynb 28
 class TDownblock(nn.Module):
+    """A superblock consisting of many downblocks of similar resolutions"""
+
     def __init__(self, t_embed, c_in, c_out, downsample=True, n_layers=1):
         super().__init__()
         self.t_embed = t_embed
@@ -119,6 +128,9 @@ class TDownblock(nn.Module):
 
 # %% ../nbs/27_diffusion_unet.ipynb 29
 class TUpblock(nn.Module):
+    """A superblock consisting of many upblocks of similar resolutions
+    and logic to use the activations of the counterpart downblock."""
+
     def __init__(self, t_embed, c_in, c_out, upsample=True, n_layers=1):
         super().__init__()
         self.t_embed = t_embed
@@ -155,6 +167,8 @@ class TUpblock(nn.Module):
 
 # %% ../nbs/27_diffusion_unet.ipynb 30
 class TimeEmbeddingMLP(nn.Module):
+    """Small neural network to alter the "raw" time embeddings"""
+
     def __init__(self, c_in, c_out):
         super().__init__()
         self.c_in = c_in
