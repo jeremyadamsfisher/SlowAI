@@ -30,4 +30,12 @@ website:
       - 22_tiny_imagenet_a.ipynb
       - 23_tiny_imagenet_b.ipynb
       - 24_super_resolution.ipynb
+      - 25_coco_a.ipynb
+      - 25_coco_b.ipynb
+      - 26_colorization.ipynb
+      - 27_diffusion_unet.ipynb
+      - 27a_investigate_kink.ipynb
+      - 28_attention.ipynb
+      - 29_imagenette_diffusion_unet.ipynb
+      - 30_vae.ipynb
       - 99_utils.ipynb

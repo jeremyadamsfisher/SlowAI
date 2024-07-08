@@ -20,7 +20,7 @@ from datasets import Dataset
 from PIL import Image
 from tqdm import tqdm
 
-from .coco import black_and_white, to_img
+from .coco import black_and_white, to_img, preprocess_super_rez
 from .cos_revisited import noisify, ᾱ
 from .learner import DataLoaders
 from .tinyimagenet_a import denorm, fill, norm

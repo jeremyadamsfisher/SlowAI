@@ -4,42 +4,25 @@
 __all__ = ['timestep_embedding', 'Conv', 'EmbeddingPreactResBlock', 'SaveTimeActivationMixin', 'TResBlock', 'TDownblock',
            'TUpblock', 'TimeEmbeddingMLP', 'TUnet', 'FashionDDPM', 'train', 'ddpm']
 
-# %% ../nbs/27_diffusion_unet.ipynb 2
+# %% ../nbs/27_diffusion_unet.ipynb 3
 import math
 from functools import partial
 from pathlib import Path
-from pdb import set_trace as st
 
 import matplotlib.pyplot as plt
 import torch
 import torch.nn.functional as F
 from torch import nn, tensor
-from torch.optim import AdamW, lr_scheduler
+from torch.optim import lr_scheduler
 from tqdm import tqdm
 
-from .activations import StoreModuleStatsCB
-from .coco import get_coco_dataset_super_rez
 from .cos_revisited import aesthetics, denoisify, noisify
 from .ddpm import get_dls as get_fashion_dls
-from slowai.learner import (
-    Callback,
-    DeviceCB,
-    Learner,
-    MetricsCB,
-    ProgressCB,
-    TrainCB,
-    def_device,
-)
+from .learner import DeviceCB, Learner, MetricsCB, ProgressCB, TrainCB, def_device
 from .sgd import BatchSchedulerCB
-from slowai.super_rez import (
-    KaimingMixin,
-    ResidualConvBlock,
-    denorm,
-    get_imagenet_super_rez_dls,
-)
 from .utils import show_image, show_images
 
-# %% ../nbs/27_diffusion_unet.ipynb 17
+# %% ../nbs/27_diffusion_unet.ipynb 18
 def timestep_embedding(ts, emb_dim, max_period=10_000):
     exponent = -math.log(max_period) * torch.linspace(
         0, 1, emb_dim // 2, device=ts.device
@@ -48,7 +31,7 @@ def timestep_embedding(ts, emb_dim, max_period=10_000):
     embedding = torch.cat([embedding.sin(), embedding.cos()], dim=-1)
     return embedding
 
-# %% ../nbs/27_diffusion_unet.ipynb 23
+# %% ../nbs/27_diffusion_unet.ipynb 24
 class Conv(nn.Module):
     def __init__(self, c_in, c_out, ks=3, stride=1):
         super().__init__()
@@ -69,7 +52,7 @@ class Conv(nn.Module):
         x = self.conv(x)
         return x
 
-# %% ../nbs/27_diffusion_unet.ipynb 24
+# %% ../nbs/27_diffusion_unet.ipynb 25
 class EmbeddingPreactResBlock(nn.Module):
     def __init__(self, t_embed, c_in, c_out, ks=3, stride=2):
         super().__init__()
@@ -98,20 +81,20 @@ class EmbeddingPreactResBlock(nn.Module):
 
         return x + xr
 
-# %% ../nbs/27_diffusion_unet.ipynb 25
+# %% ../nbs/27_diffusion_unet.ipynb 26
 class SaveTimeActivationMixin:
     def forward(self, x, t):
         self.output = super().forward(x, t)
         return self.output
 
-# %% ../nbs/27_diffusion_unet.ipynb 26
+# %% ../nbs/27_diffusion_unet.ipynb 27
 class TResBlock(
     SaveTimeActivationMixin,
     EmbeddingPreactResBlock,
 ):
     ...
 
-# %% ../nbs/27_diffusion_unet.ipynb 27
+# %% ../nbs/27_diffusion_unet.ipynb 28
 class TDownblock(nn.Module):
     def __init__(self, t_embed, c_in, c_out, downsample=True, n_layers=1):
         super().__init__()
@@ -134,7 +117,7 @@ class TDownblock(nn.Module):
             x = self.downsampler(x)
         return x
 
-# %% ../nbs/27_diffusion_unet.ipynb 28
+# %% ../nbs/27_diffusion_unet.ipynb 29
 class TUpblock(nn.Module):
     def __init__(self, t_embed, c_in, c_out, upsample=True, n_layers=1):
         super().__init__()
@@ -170,7 +153,7 @@ class TUpblock(nn.Module):
             x = up(torch.cat((x, down.output), dim=1), t)
         return x
 
-# %% ../nbs/27_diffusion_unet.ipynb 29
+# %% ../nbs/27_diffusion_unet.ipynb 30
 class TimeEmbeddingMLP(nn.Module):
     def __init__(self, c_in, c_out):
         super().__init__()
@@ -190,8 +173,8 @@ class TimeEmbeddingMLP(nn.Module):
         x = self.time_emb_mlp(x)
         return x
 
-
-class TUnet(nn.Module, KaimingMixin):
+# %% ../nbs/27_diffusion_unet.ipynb 31
+class TUnet(nn.Module):
     """Diffusion U-net with a diffusion time dimension"""
 
     def __init__(
@@ -233,7 +216,7 @@ class TUnet(nn.Module, KaimingMixin):
             x = ub(x, db, t)
         return self.end(x)
 
-# %% ../nbs/27_diffusion_unet.ipynb 30
+# %% ../nbs/27_diffusion_unet.ipynb 32
 class FashionDDPM(TrainCB):
     def before_batch(self, learn):
         x0, _ = learn.batch
@@ -247,7 +230,7 @@ class FashionDDPM(TrainCB):
         _, epsilon = learn.batch
         learn.loss = learn.loss_func(learn.preds, epsilon)
 
-# %% ../nbs/27_diffusion_unet.ipynb 31
+# %% ../nbs/27_diffusion_unet.ipynb 33
 def train(model, dls, lr=4e-3, n_epochs=25, extra_cbs=[], loss_fn=F.mse_loss):
     T_max = len(dls["train"]) * n_epochs
     scheduler = BatchSchedulerCB(lr_scheduler.OneCycleLR, max_lr=lr, total_steps=T_max)
@@ -271,7 +254,7 @@ def train(model, dls, lr=4e-3, n_epochs=25, extra_cbs=[], loss_fn=F.mse_loss):
     learner.fit(n_epochs)
     return model
 
-# %% ../nbs/27_diffusion_unet.ipynb 36
+# %% ../nbs/27_diffusion_unet.ipynb 38
 @torch.no_grad()
 def ddpm(model, sz=(16, 1, 32, 32), device=def_device, n_steps=100):
     x_0s = []
@@ -279,7 +262,6 @@ def ddpm(model, sz=(16, 1, 32, 32), device=def_device, n_steps=100):
     ts = torch.linspace(1 - (1 / n_steps), 0, n_steps).to(device)
     for t, t_next in tqdm(zip(ts, ts[1:]), unit="time step", total=n_steps - 1):
         # Predict the noise for each example in the image
-
         bs, *_ = x_t.shape
         noise_pred = model(x_t, t.repeat(bs))
 
