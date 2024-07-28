@@ -24,6 +24,8 @@ from .utils import show_images
 
 # %% ../nbs/28_attention.ipynb 6
 class MultiheadSelfAttention1D(nn.Module):
+    """Multi-head self-attention"""
+
     def __init__(self, nc, nh):
         super().__init__()
         self.nc = nc
@@ -41,7 +43,7 @@ class MultiheadSelfAttention1D(nn.Module):
         # Project into a K, Q, V space
         x = self.kqv(x)
         # Divide into different heads of K, Q and V
-        k, q, v = rearrange(x, "b t (nh hs k) -> kqv (b nh) t hs", nh=self.nh, kqv=3)
+        k, q, v = rearrange(x, "b t (nh hs kqv) -> kqv (b nh) t hs", nh=self.nh, kqv=3)
         # Compute affinity
         affinity_scores = k @ q.transpose(1, 2)
         affinity_scores /= math.sqrt(self.nc / self.nh)
@@ -58,6 +60,8 @@ class MultiheadSelfAttention1D(nn.Module):
 
 # %% ../nbs/28_attention.ipynb 11
 class TAResBlock(nn.Module):
+    """Res-block with attention"""
+
     def __init__(self, t_embed, c_in, c_out, ks=3, stride=2, nh=None):
         super().__init__()
         self.t_embed = t_embed
@@ -100,6 +104,8 @@ class TAResBlock(nn.Module):
 
 # %% ../nbs/28_attention.ipynb 12
 class TADownblock(TDownblock):
+    """Resdownblock with attention"""
+
     def __init__(self, t_embed, c_in, c_out, downsample=True, n_layers=1, nh=None):
         super().__init__(t_embed, c_in, c_out, downsample, n_layers)
 
@@ -112,6 +118,8 @@ class TADownblock(TDownblock):
 
 # %% ../nbs/28_attention.ipynb 13
 class TAUpblock(TUpblock):
+    """Resupblock with attention"""
+
     def __init__(self, t_embed, c_in, c_out, upsample=True, n_layers=1, nh=None):
         super().__init__(t_embed, c_in, c_out, upsample, n_layers)
 
@@ -123,6 +131,8 @@ class TAUpblock(TUpblock):
 
 # %% ../nbs/28_attention.ipynb 14
 class TAUnet(TUnet):
+    """U-net with attention up/down-blocks"""
+
     def __init__(
         self,
         nfs=(224, 448, 672, 896),

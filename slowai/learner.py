@@ -453,10 +453,10 @@ def to_cpu(x):
     return res.float() if res.dtype == torch.float16 else res
 
 # %% ../nbs/07_learner.ipynb 35
-def fashion_mnist(bs=2048):
+def fashion_mnist(bs=2048, **kwargs):
     """Helper to use fashion MNIST"""
     return tensorize_images(
-        DataLoaders.from_hf("fashion_mnist", bs=bs, nworkers=4)
+        DataLoaders.from_hf("fashion_mnist", bs=bs, nworkers=4), **kwargs
     ).listify()
 
 # %% ../nbs/07_learner.ipynb 42
